@@ -59,13 +59,13 @@ unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LP
 }
 
 /// Figure out a pressed key-code and a boolean indicating the key being pressed or not from hook callback arguments.
-fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u32, bool)> {
+fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u8, bool)> {
 
 	// Keyboard
 	if w_param == WM_KEYDOWN || w_param == WM_KEYUP {
 		let kbd:&KBDLLHOOKSTRUCT = unsafe { &*(l_param as *const KBDLLHOOKSTRUCT) };
 		if kbd.flags & LLKHF_INJECTED == 0 {
-			return Some((kbd.vkCode, w_param == WM_KEYDOWN));
+			return Some((kbd.vkCode as u8, w_param == WM_KEYDOWN));
 		}
 	}
 
@@ -90,7 +90,7 @@ fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u32, bool)> 
 }
 
 /// Handle a key being pressed or released.
-fn handle_key_alteration(key_code:u32, down:bool) {
+fn handle_key_alteration(key_code:u8, down:bool) {
 	unsafe {
 		let modification_key:U256 = if key_code < 128 { U256::new(0, 1 << (key_code - 1)) } else { U256::new(1 << (key_code - 129), 1 << (key_code - 1)) };
 		if down {
@@ -99,4 +99,13 @@ fn handle_key_alteration(key_code:u32, down:bool) {
 			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES & !modification_key;
 		}
 	}
+}
+
+
+/* KEY STATE METHODS */
+
+/// Get the key state of a key.
+pub fn get_key_state(key_code:u8) -> bool {
+	let modification_key:U256 = if key_code < 128 { U256::new(0, 1 << (key_code - 1)) } else { U256::new(1 << (key_code - 129), 1 << (key_code - 1)) };
+	unsafe { PHYSICAL_KEY_STATES & modification_key != U256::ZERO }
 }

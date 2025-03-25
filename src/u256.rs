@@ -7,8 +7,10 @@ pub(crate) struct U256 {
 	high:u128,
 	low:u128
 }
-
 impl U256 {
+	pub const ZERO:U256 = U256 { high: 0, low: 0 };
+
+
 
 	/* CONSTRUCTOR METHODS */
 
