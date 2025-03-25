@@ -1,6 +1,6 @@
 use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
 use std::{ mem, ptr, thread::{ self, sleep }, time::Duration };
-use crate::{ key_hook, U256 };
+use crate::{ key_hook::{self, handle_virtual_key_alteration}, U256 };
 
 
 
@@ -36,6 +36,7 @@ impl Key {
 		} else {
 			self.create_keyboard_event(0);
 		}
+		handle_virtual_key_alteration(self.0, true);
 	}
 
 	/// Release the key.
@@ -45,6 +46,7 @@ impl Key {
 		} else {
 			self.create_keyboard_event(KEYEVENTF_KEYUP);
 		}
+		handle_virtual_key_alteration(self.0, false);
 	}
 
 	/// Send the key.
