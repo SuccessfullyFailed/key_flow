@@ -1,6 +1,6 @@
 use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
 use std::{ mem, ptr, thread::{ self, sleep }, time::Duration };
-use crate::key_hook;
+use crate::{ key_hook, U256 };
 
 
 
@@ -18,6 +18,11 @@ impl Key {
 
 
 	/* USAGE METHODS */
+
+	/// Return the key as a pattern.
+	pub(crate) fn as_pattern(&self) -> U256 {
+		if self.0 < 128 { U256::new(0, 1 << (self.0 - 1)) } else { U256::new(1 << (self.0 - 129), 1 << (self.0 - 1)) }
+	}
 
 	/// Check if the key is down.
 	pub fn down(&self) -> bool {

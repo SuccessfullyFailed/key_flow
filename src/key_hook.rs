@@ -1,6 +1,6 @@
 use winapi::{shared::{minwindef::{LPARAM, LRESULT, WPARAM}, windef::HHOOK__}, um::winuser::{CallNextHookEx, KBDLLHOOKSTRUCT, LLKHF_INJECTED, LLMHF_INJECTED, MSLLHOOKSTRUCT, WM_KEYDOWN, WM_KEYUP}};
 use std::{ptr, sync::{Mutex, MutexGuard}};
-use crate::U256;
+use crate::{Key, U256};
 
 
 
@@ -44,13 +44,19 @@ pub fn install() {
 /* HOOK HANDLING METHODS */
 
 /// The callback to catch the pressed keys.
+#[allow(static_mut_refs)]
 unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LPARAM) -> LRESULT {
+	use crate::hokey::REGISTERED_HOTKEYS;
+
 	let w_param:usize = w_param as usize;
 
 	// Find key id and state change from arguments.
 	if key_code >= 0 {
 		if let Some((key, down)) = params_to_key_alteration(w_param as u32, l_param) {
 			handle_key_alteration(key, down);
+			for hotkey in REGISTERED_HOTKEYS.lock().unwrap().iter_mut().filter(|hotkey| hotkey.enabled()) {
+				hotkey.update_state(&PHYSICAL_KEY_STATES);
+			}
 		}
 	}
 
@@ -92,11 +98,10 @@ fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u8, bool)> {
 /// Handle a key being pressed or released.
 fn handle_key_alteration(key_code:u8, down:bool) {
 	unsafe {
-		let modification_key:U256 = if key_code < 128 { U256::new(0, 1 << (key_code - 1)) } else { U256::new(1 << (key_code - 129), 1 << (key_code - 1)) };
 		if down {
-			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES ^ modification_key;
+			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES ^ Key::new(key_code).as_pattern();
 		} else {
-			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES & !modification_key;
+			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES & !Key::new(key_code).as_pattern();
 		}
 	}
 }
@@ -106,6 +111,5 @@ fn handle_key_alteration(key_code:u8, down:bool) {
 
 /// Get the key state of a key.
 pub fn get_key_state(key_code:u8) -> bool {
-	let modification_key:U256 = if key_code < 128 { U256::new(0, 1 << (key_code - 1)) } else { U256::new(1 << (key_code - 129), 1 << (key_code - 1)) };
-	unsafe { PHYSICAL_KEY_STATES & modification_key != U256::ZERO }
+	unsafe { PHYSICAL_KEY_STATES & Key::new(key_code).as_pattern() != U256::ZERO }
 }
