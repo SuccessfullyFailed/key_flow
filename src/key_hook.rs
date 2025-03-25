@@ -4,15 +4,14 @@ use crate::{Key, U256};
 
 
 
-static mut LISTENER_THREAD_ID:Mutex<Option<u32>> = Mutex::new(None);
-static mut PHYSICAL_KEY_STATES:U256 = U256::zero();
+static LISTENER_THREAD_ID:Mutex<Option<u32>> = Mutex::new(None);
+static mut PHYSICAL_KEY_STATES:U256 = U256::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
 
 
 
 /* HOOK INSTALLATION METHODS */
 
 /// Install the mouse and keyboard hook.
-#[allow(static_mut_refs)]
 pub fn install() {
 	use winapi::um::{ processthreadsapi::GetCurrentThreadId, winuser::{ SetWindowsHookExW, WH_MOUSE_LL, WH_KEYBOARD_LL, GetMessageW } };
 	use std::{ thread, ptr::null_mut };
@@ -55,7 +54,7 @@ unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LP
 		if let Some((key, down)) = params_to_key_alteration(w_param as u32, l_param) {
 			handle_key_alteration(key, down);
 			for hotkey in REGISTERED_HOTKEYS.lock().unwrap().iter_mut().filter(|hotkey| hotkey.enabled()) {
-				hotkey.update_state(&PHYSICAL_KEY_STATES);
+				hotkey.update_state(unsafe { &PHYSICAL_KEY_STATES });
 			}
 		}
 	}
@@ -96,6 +95,7 @@ fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u8, bool)> {
 }
 
 /// Handle a key being pressed or released.
+#[allow(static_mut_refs)]
 fn handle_key_alteration(key_code:u8, down:bool) {
 	unsafe {
 		if down {
