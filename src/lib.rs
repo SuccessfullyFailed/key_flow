@@ -6,6 +6,7 @@ mod hokey;
 
 pub mod key_hook;
 pub mod keys;
+pub mod mouse;
 
 pub use key::Key;
 pub(crate) use u256::U256;
