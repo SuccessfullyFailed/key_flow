@@ -49,19 +49,26 @@ unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LP
 	use crate::hokey::REGISTERED_HOTKEYS;
 
 	let w_param:usize = w_param as usize;
+	let mut blocking:bool = false;
 
 	// Find key id and state change from arguments.
 	if key_code >= 0 {
 		if let Some((key, down)) = params_to_key_alteration(w_param as u32, l_param) {
 			handle_key_alteration(key, down);
 			for hotkey in REGISTERED_HOTKEYS.lock().unwrap().iter_mut().filter(|hotkey| hotkey.enabled()) {
-				hotkey.update_state(unsafe { &PHYSICAL_KEY_STATES });
+				if hotkey.update_state(unsafe { &PHYSICAL_KEY_STATES }) {
+					blocking = true;
+				}
 			}
 		}
 	}
 
 	// Move on to next callback.
-	unsafe { CallNextHookEx(ptr::null_mut(), key_code, w_param, l_param) }
+	if blocking {
+		1
+	} else {
+		unsafe { CallNextHookEx(ptr::null_mut(), key_code, w_param, l_param) }
+	}
 }
 
 /// Figure out a pressed key-code and a boolean indicating the key being pressed or not from hook callback arguments.
