@@ -11,3 +11,5 @@ pub mod mouse;
 pub use key::Key;
 pub(crate) use u256::U256;
 pub use hokey::{ Hotkey, HotkeyHandle };
+
+pub mod humanlike; // TODO: Move to feature
