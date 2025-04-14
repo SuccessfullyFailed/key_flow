@@ -1,5 +1,6 @@
 use std::{ error::Error, thread::sleep, time::Duration };
 use minifb::{ Window, WindowOptions, MouseMode };
+use super::mouse::MouseProgressionPath;
 use rand::Rng;
 
 
@@ -146,68 +147,6 @@ impl MouseRecording {
 		// Return success.
 		Ok(())
 	}
-}
-
-
-
-pub struct MouseProgressionPath {
-	start:[usize; 2],
-	end:[usize; 2],
-	path:Vec<[f32; 2]>
-}
-impl MouseProgressionPath {
-
-	/// Create a new path from raw mouse positions.
-	pub fn new(mouse_path:Vec<[usize; 2]>) -> MouseProgressionPath {
-		const MINIMUM_MOVEMENT:usize = 2;
-		const HAS_MINIMUM_MOVEMENT:fn(&[usize; 2], &[usize; 2]) -> bool = |left, right| ((left[0].max(right[0]) - left[0].min(right[0])) + (left[1].max(right[1]) - left[1].min(right[1]))) >= MINIMUM_MOVEMENT;
-
-		let start_index:usize = mouse_path.iter().skip(1).enumerate().position(|(previous_index, current)| HAS_MINIMUM_MOVEMENT(&mouse_path[previous_index], current)).unwrap_or_default();
-		let end_index:usize = mouse_path.len() - 1 - mouse_path.iter().rev().skip(1).enumerate().position(|(previous_index, current)| HAS_MINIMUM_MOVEMENT(&mouse_path[previous_index], current)).unwrap_or_default();
-		let end_index:usize = end_index.max(start_index);
-		let start_f32:[f32; 2] = [mouse_path[start_index][0] as f32, mouse_path[start_index][1] as f32];
-		let end_f32:[f32; 2] = [mouse_path[end_index][0] as f32, mouse_path[end_index][1] as f32];
-		MouseProgressionPath {
-			start: mouse_path[start_index],
-			end: mouse_path[end_index],
-			path: mouse_path[start_index..end_index].into_iter().map(|position| [(position[0] as f32 - start_f32[0]) / (end_f32[0] - start_f32[0]), (position[1] as f32 - start_f32[1]) / (end_f32[1] - start_f32[1])]).collect()
-		}
-	}
-
-	/// Draw self on the buffer of a graph.
-	fn draw_on_graph_buffer(&self, buffer:&mut [u32], color_x:u32, color_y:u32, window_size:&[usize; 2], inner_bounds:&[usize; 4]) {
-		let path_len_f32:f32 = self.path.len() as f32;
-		let mut last_position:[[usize; 2]; 2] = [[inner_bounds[0], inner_bounds[1] + inner_bounds[3]]; 2];
-		for (index, position) in self.path.iter().enumerate() {
-			let x:usize = (index as f32 / path_len_f32 * inner_bounds[2] as f32) as usize;
-			for axis in 0..2 {
-				let y:usize = (inner_bounds[1] as f32 + inner_bounds[3] as f32 * position[axis]).max(0.0).min(window_size[1] as f32 - 1.0) as usize;
-				for coord in coords_in_line(last_position[axis], [x, y]) {
-					buffer[coord[1] * window_size[0] + coord[0]] = if axis == 0 { color_x } else { color_y };
-				}
-				last_position[axis] = [x, y];
-			}
-		}
-	}
-}
-
-/// Get the coordinates of all pixels in a line.
-fn coords_in_line(start:[usize; 2], end:[usize; 2]) -> Vec<[usize; 2]> {
-	let start:[isize; 2] = [start[0] as isize, start[1] as isize];
-	let end:[isize; 2] = [end[0] as isize, end[1] as isize];
-	let difference:[isize; 2] = [(end[0] - start[0]).abs(), -(end[1] - start[1]).abs()];
-	let mirror:[isize; 2] = [if start[0] < end[0] { 1 } else { -1 }, if start[1] < end[1] { 1 } else { -1 }];
-
-	let mut coords:Vec<[isize; 2]> = vec![start];
-	let mut cursor:[isize; 2] = start;
-	let mut cursor_off_from_ideal:isize = difference[0] + difference[1];
-	while cursor != end {
-		let double_off_from_ideal:isize = 2 * cursor_off_from_ideal;
-		if double_off_from_ideal >= difference[1] { cursor_off_from_ideal += difference[1]; cursor[0] += mirror[0]; }
-		if double_off_from_ideal <= difference[0] { cursor_off_from_ideal += difference[0]; cursor[1] += mirror[1]; }
-		coords.push(cursor);
-	}
-	coords.into_iter().map(|coord| [coord[0] as usize, coord[1] as usize]).collect()
 }
 
 
