@@ -1,6 +1,7 @@
 use std::{ error::Error, thread::sleep, time::Duration };
 use minifb::{ Window, WindowOptions, MouseMode };
 use super::mouse::MouseProgressionPath;
+use file_ref::FileRef;
 use rand::Rng;
 
 
@@ -147,15 +148,13 @@ impl MouseRecording {
 		// Return success.
 		Ok(())
 	}
-}
 
-
-
-#[cfg(test)]
-#[test]
-fn test() {
-	if std::env::var("RECORD_HUMANLIKE_MOUSE").map(|value| value == "1").unwrap_or(false) {
-		let result:MouseRecording = MouseRecording::create([800, 600], 10).unwrap();
-		result.show_graph([1200, 800]).unwrap();
+	/// Save the recording to the specified dir.
+	pub(super) fn save_to(&self, target_dir:&FileRef) -> Result<(), Box<dyn Error>> {
+		target_dir.guarantee_exists()?;
+		for (index, path) in self.0.iter().enumerate() {
+			(target_dir.clone() + &format!("/{index}.dat")).write_bytes(&path.to_bytes())?;
+		}
+		Ok(())
 	}
 }

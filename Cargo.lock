@@ -27,6 +27,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1628fb46dfa0b37568d12e5edd512553eccf6a22a78e8bde00bb4aed84d5bdbf"
 
 [[package]]
+name = "cachew"
+version = "0.1.0"
+source = "git+https://github.com/SuccessfullyFailed/cachew#03854d37793219d1369c00bf77ebd1e86b561a16"
+
+[[package]]
 name = "cc"
 version = "1.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -220,6 +225,7 @@ dependencies = [
 name = "key_flow"
 version = "0.1.0"
 dependencies = [
+ "cachew",
  "file_ref",
  "minifb",
  "rand",

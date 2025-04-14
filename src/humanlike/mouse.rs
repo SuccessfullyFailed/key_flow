@@ -1,6 +1,46 @@
+use super::recorder::MouseRecording;
+use rand::{rngs::ThreadRng, seq::IndexedRandom};
 use std::error::Error;
-
 use file_ref::FileRef;
+use cachew::cache;
+
+
+
+/// Get a random mouse progression path.
+fn random_progression_path() -> Result<&'static MouseProgressionPath, Box<dyn Error>> {
+	let available_paths:&mut Vec<MouseProgressionPath> = cache!(Vec<MouseProgressionPath>, load_progression_paths()?);
+	Ok(available_paths.choose(cache!(ThreadRng, rand::rng())).unwrap())
+}
+
+/// Load all progression paths available in dedicated dir.
+fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>> {
+	const RECORD_MOUSE_ARG:&str = "RECORD_HUMANLIKE_MOUSE";
+	const RECORD_MOUSE_ARG_ACCEPTANCE_VALUE:&str = "1";
+	const DEFAULT_DIR:FileRef = FileRef::new_const("./target/key_flow/humanlike/mouse_paths");
+
+	// Read files.
+	let exported_paths_dir:FileRef = std::env::var("KEY_FLOW_HUMAN_LIKE_MOUSE_PATHS_DIR").map(|path| FileRef::new(&path)).unwrap_or(DEFAULT_DIR);
+	let mut exported_paths_files:Vec<FileRef> = exported_paths_dir.list_files();
+
+	// If dir doesn't exist or has no files, ask user to create a recording.
+	if !exported_paths_dir.exists() || exported_paths_files.is_empty() {
+		eprintln!("KeyFlow humanlike could not find mouse path records. Please run a keyflow mouse movement function with environment variable {} set to {}. This will start a target practice minigame that records your mouse movement to replicate personalized mouse movement.", RECORD_MOUSE_ARG, RECORD_MOUSE_ARG_ACCEPTANCE_VALUE);
+		if std::env::var(RECORD_MOUSE_ARG).map(|value| value == RECORD_MOUSE_ARG_ACCEPTANCE_VALUE).unwrap_or(false) {
+			let recording:MouseRecording = MouseRecording::create([800, 600], 10)?;
+			recording.show_graph([800, 600])?;
+			recording.save_to(&exported_paths_dir)?;
+			exported_paths_files = exported_paths_dir.list_files();
+		}
+	}
+	
+	// Create paths.
+	let mut paths:Vec<MouseProgressionPath> = exported_paths_files.into_iter().map(|file| MouseProgressionPath::from_file(file.path())).flatten().collect();
+	if paths.is_empty() {
+		eprintln!("Could not find any mouse path records. Using linear paths for now.");
+		paths = vec![MouseProgressionPath::new(vec![[0, 0], [100, 100]])];
+	}
+	Ok(paths)
+}
 
 
 
@@ -77,7 +117,7 @@ impl MouseProgressionPath {
 	/* STORING AND LOADING METHODS */
 
 	/// Convert to bytes.
-	pub fn to_bytes(&self) -> Vec<u8> {
+	pub(super) fn to_bytes(&self) -> Vec<u8> {
 		vec![
 			self.start.iter().map(|value| (*value as u64).to_be_bytes()).flatten().collect::<Vec<u8>>(),
 			self.end.iter().map(|value| (*value as u64).to_be_bytes()).flatten().collect::<Vec<u8>>(),
@@ -86,7 +126,7 @@ impl MouseProgressionPath {
 	}
 
 	/// Create from bytes.
-	pub fn from_bytes(bytes:&[u8]) -> Result<MouseProgressionPath, Box<dyn Error>> {
+	pub(super) fn from_bytes(bytes:&[u8]) -> Result<MouseProgressionPath, Box<dyn Error>> {
 		const MIN_BYTES:usize = 8 * 4;
 
 		let bytes_len:usize = bytes.len();
@@ -112,12 +152,12 @@ impl MouseProgressionPath {
 	}
 
 	/// Load from a file.
-	pub fn from_file(path:&str) -> Result<MouseProgressionPath, Box<dyn Error>> {
+	pub(super) fn from_file(path:&str) -> Result<MouseProgressionPath, Box<dyn Error>> {
 		MouseProgressionPath::from_bytes(&FileRef::new(path).read_bytes()?)
 	}
 
 	/// Store to a file.
-	pub fn to_file(&self, path:&str) -> Result<(), Box<dyn Error>> {
+	pub(super)  fn to_file(&self, path:&str) -> Result<(), Box<dyn Error>> {
 		FileRef::new(path).write_bytes(&self.to_bytes())
 	}
 }
