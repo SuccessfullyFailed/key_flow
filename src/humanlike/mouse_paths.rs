@@ -80,7 +80,7 @@ fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>>
 	if !exported_paths_dir.exists() || exported_paths_files.is_empty() {
 		eprintln!("KeyFlow humanlike could not find mouse path records. Please run a keyflow mouse movement function with environment variable {} set to {}. This will start a target practice minigame that records your mouse movement to replicate personalized mouse movement.", RECORD_CURSOR_ARG, RECORD_CURSOR_ARG_ACCEPTANCE_VALUE);
 		if std::env::var(RECORD_CURSOR_ARG).map(|value| value == RECORD_CURSOR_ARG_ACCEPTANCE_VALUE).unwrap_or(false) {
-			let recording:MouseRecording = MouseRecording::create([800, 600], 10)?;
+			let recording:MouseRecording = MouseRecording::create([800, 600], 100)?;
 			recording.show_graph([800, 600])?;
 			recording.save_to(&exported_paths_dir)?;
 			exported_paths_files = exported_paths_dir.list_files();
@@ -211,7 +211,7 @@ impl MouseProgressionPath {
 	}
 
 	/// Store to a file.
-	pub(super)  fn to_file(&self, path:&str) -> Result<(), Box<dyn Error>> {
+	pub(super) fn save_to_file(&self, path:&str) -> Result<(), Box<dyn Error>> {
 		FileRef::new(path).write_bytes(&self.to_bytes())
 	}
 }

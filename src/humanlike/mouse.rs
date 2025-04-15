@@ -74,3 +74,10 @@ pub fn drag<T>(start_position:[i32; 2], end_position:[i32; 2], position_randomne
 		move_to(original_position, position_randomness, interval, move_duration, duration_randomness);
 	}
 }
+
+
+#[cfg(test)]
+#[test]
+fn test() {
+	move_to([0, 0], [10, 10], 16, 500, 100);
+}

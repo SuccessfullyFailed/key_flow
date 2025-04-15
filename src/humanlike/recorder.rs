@@ -155,7 +155,7 @@ impl MouseRecording {
 	pub(super) fn save_to(&self, target_dir:&FileRef) -> Result<(), Box<dyn Error>> {
 		target_dir.guarantee_exists()?;
 		for (index, path) in self.0.iter().enumerate() {
-			(target_dir.clone() + &format!("/{index}.dat")).write_bytes(&path.to_bytes())?;
+			path.save_to_file((target_dir.clone() + &format!("/{index}.dat")).path())?;
 		}
 		Ok(())
 	}

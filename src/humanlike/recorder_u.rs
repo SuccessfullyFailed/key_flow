@@ -29,7 +29,7 @@ mod tests {
 		const FILE_PATH:&str = "target/MouseProgressionPath_unittest.dat";
 
 		let original_path:MouseProgressionPath = random_mouse_progression_path();
-		original_path.to_file(FILE_PATH).unwrap();
+		original_path.save_to_file(FILE_PATH).unwrap();
 		let path_from_file:MouseProgressionPath = MouseProgressionPath::from_file(FILE_PATH).unwrap();
 		FileRef::new(FILE_PATH).delete().unwrap();
 		
