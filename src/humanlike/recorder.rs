@@ -29,11 +29,11 @@ impl MouseRecording {
 		const TARGET_SIZE:usize = 10;
 		const TARGET_COLOR:u32 = 0xFFFF0000;
 		const BACKGROUND_COLOR:u32 = 0xFF202020;
-		const TRACKING_PATH_MIN_DISTANCE:usize = 10;
 		const TRACKING_PATH_INITIAL_VEC_SIZE:usize = 1000;
 		const TRACKING_PATH_MIN_ENTRIES:usize = 20;
 		const CURSOR_STILL_MAX_MOVEMENT:usize = 1;
 		const CURSOR_STILL_TARGET_COUNT:usize = 20;
+		let tracking_path_min_distance:usize = inner_size[0] / 3;
 
 		// Create "target practive" window.
 		let mut window:Window = Window::new("KeyFlow mouse recorder", window_size[0], window_size[1], WindowOptions::default())?;
@@ -80,7 +80,7 @@ impl MouseRecording {
 			// Update target position.
 			if source == target || move_target {
 				source = cursor_position;
-				while source[0].max(target[0]) - source[0].min(target[0]) < TRACKING_PATH_MIN_DISTANCE && source[1].max(target[1]) - source[1].min(target[1]) < TRACKING_PATH_MIN_DISTANCE {
+				while source[0].max(target[0]) - source[0].min(target[0]) < tracking_path_min_distance && source[1].max(target[1]) - source[1].min(target[1]) < tracking_path_min_distance {
 					target = [rng.random_range(inner_size[0]..inner_size[0] + inner_size[2] - TARGET_SIZE), rng.random_range(inner_size[1]..inner_size[1] + inner_size[3] - TARGET_SIZE)];
 				}
 				let mut buffer:Vec<u32> = vec![BACKGROUND_COLOR; window_size[0] * window_size[1]];
@@ -139,12 +139,14 @@ impl MouseRecording {
 		// Create and show window.
 		let mut window:Window = Window::new("KeyFlow mouse recorder", window_size[0], window_size[1], WindowOptions::default())?;
 		let mut active_path_index:usize = 0;
-		while window.is_active() {
-			self.0[active_path_index].draw_on_graph_buffer(&mut buffer, GRAPH_COLOR_ACTIVE_X, GRAPH_COLOR_ACTIVE_Y, &window_size, &inner_bounds);
-			window.update_with_buffer(&buffer, window_size[0], window_size[1])?;
-			sleep(INTERVAL);
-			self.0[active_path_index].draw_on_graph_buffer(&mut buffer, GRAPH_COLOR_X, GRAPH_COLOR_Y, &window_size, &inner_bounds);
-			active_path_index = (active_path_index + 1) % self.0.len();
+		if !self.0.is_empty() {
+			while window.is_active() {
+				self.0[active_path_index].draw_on_graph_buffer(&mut buffer, GRAPH_COLOR_ACTIVE_X, GRAPH_COLOR_ACTIVE_Y, &window_size, &inner_bounds);
+				window.update_with_buffer(&buffer, window_size[0], window_size[1])?;
+				sleep(INTERVAL);
+				self.0[active_path_index].draw_on_graph_buffer(&mut buffer, GRAPH_COLOR_X, GRAPH_COLOR_Y, &window_size, &inner_bounds);
+				active_path_index = (active_path_index + 1) % self.0.len();
+			}
 		}
 
 		// Return success.

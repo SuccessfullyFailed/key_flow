@@ -7,6 +7,8 @@ use cachew::cache;
 
 
 pub(super) const CURSOR_RECORDINGS_DIR_ENV_VAR:&str = "KEY_FLOW_HUMAN_LIKE_MOUSE_PATHS_DIR";
+pub(super) const RECORD_CURSOR_ARG:&str = "RECORD_HUMANLIKE_MOUSE";
+pub(super) const RECORD_CURSOR_ARG_ACCEPTANCE_VALUE:&str = "1";
 const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
 
 
@@ -68,8 +70,6 @@ fn random_progression_path() -> &'static MouseProgressionPath {
 
 /// Load all progression paths available in dedicated dir.
 fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>> {
-	const RECORD_CURSOR_ARG:&str = "RECORD_HUMANLIKE_MOUSE";
-	const RECORD_CURSOR_ARG_ACCEPTANCE_VALUE:&str = "1";
 	const DEFAULT_CURSOR_RECORDS_DIR:FileRef = FileRef::new_const("./target/key_flow/humanlike/mouse_paths");
 
 	// Read files.
