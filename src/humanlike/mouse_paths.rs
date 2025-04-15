@@ -31,7 +31,7 @@ pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_rando
 	let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
 	let displacement_random_amount:[i32; 2] = displacement_randomness.map(|value| if value == 0 { 0 } else { rng.random_range(-value..value)});
 	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement_random_amount[1]];
-	let duration_ms:u64 = duration_ms + if duration_randomness_ms == 0 { 0 } else { rng.random_range(0..2 * duration_randomness_ms) - duration_randomness_ms / 2 };
+	let duration_ms:u64 = (duration_ms as i64 + if duration_randomness_ms == 0 { 0 } else { rng.random_range(0..2 * duration_randomness_ms as i64) - duration_randomness_ms as i64 / 2 }) as u64;
 	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
 	
 	// Pick and parse random base path.

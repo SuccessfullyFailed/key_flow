@@ -115,20 +115,27 @@ impl Key {
 
 
 pub trait KeyPressDuration {
-	fn as_duration(self) -> Duration;
+	fn as_duration(&self) -> Duration;
+	fn as_millis(&self) -> u64;
 	fn is_empty(&self) -> bool;
 }
 impl KeyPressDuration for Duration {
-	fn as_duration(self) -> Duration {
-		self
+	fn as_duration(&self) -> Duration {
+		self.clone()
+	}
+	fn as_millis(&self) -> u64 {
+		Duration::as_millis(&self) as u64
 	}
 	fn is_empty(&self) -> bool {
 		self.as_millis() == 0
 	}
 }
 impl KeyPressDuration for u64 {
-	fn as_duration(self) -> Duration {
-		Duration::from_millis(self)
+	fn as_duration(&self) -> Duration {
+		Duration::from_millis(*self)
+	}
+	fn as_millis(&self) -> u64 {
+		*self
 	}
 	fn is_empty(&self) -> bool {
 		*self == 0
