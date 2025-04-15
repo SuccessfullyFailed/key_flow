@@ -1,7 +1,7 @@
+use rand::{ rngs::ThreadRng, seq::IndexedRandom, Rng };
 use super::mouse_recorder::MouseRecording;
-use rand::{rngs::ThreadRng, seq::IndexedRandom, Rng};
-use std::error::Error;
 use file_ref::FileRef;
+use std::error::Error;
 use cachew::cache;
 
 
@@ -118,11 +118,27 @@ impl MouseProgressionPath {
 		let end_index:usize = end_index.max(start_index);
 		let start_f32:[f32; 2] = [mouse_path[start_index][0] as f32, mouse_path[start_index][1] as f32];
 		let end_f32:[f32; 2] = [mouse_path[end_index][0] as f32, mouse_path[end_index][1] as f32];
-		MouseProgressionPath {
-			start: mouse_path[start_index],
-			end: mouse_path[end_index],
-			path: mouse_path[start_index..end_index + 1].into_iter().map(|position| [(position[0] as f32 - start_f32[0]) / (end_f32[0] - start_f32[0]), (position[1] as f32 - start_f32[1]) / (end_f32[1] - start_f32[1])]).collect()
+		MouseProgressionPath::new_processed(
+			mouse_path[start_index],
+			mouse_path[end_index],
+			mouse_path[start_index..end_index + 1].into_iter().map(|position| [(position[0] as f32 - start_f32[0]) / (end_f32[0] - start_f32[0]), (position[1] as f32 - start_f32[1]) / (end_f32[1] - start_f32[1])]).collect()
+		)
+	}
+
+	/// Create a new path from processed data.
+	fn new_processed(start:[usize; 2], end:[usize; 2], path:Vec<[f32; 2]>) -> MouseProgressionPath {
+		const MAX_ALLOWED_SPIKE:f32 = 1.6;
+
+		let mut path:MouseProgressionPath = MouseProgressionPath { start, end, path };
+
+		// If invalid sample, try to fix it.
+		let largest_spike:&f32 = path.path.iter().flatten().reduce(|a, b| if a.abs() > b.abs() { a } else { b }).unwrap_or(&0.0);
+		if largest_spike.abs() > MAX_ALLOWED_SPIKE {
+			let scale:f32 = 1.0 / largest_spike.abs() * MAX_ALLOWED_SPIKE;
+			path.path.iter_mut().flatten().for_each(|sample| *sample *= scale);
 		}
+
+		path
 	}
 
 
@@ -198,11 +214,7 @@ impl MouseProgressionPath {
 			]);
 		}
 
-		Ok(MouseProgressionPath {
-			start,
-			end,
-			path: coords
-		})
+		Ok(MouseProgressionPath::new_processed(start, end, coords))
 	}
 
 	/// Load from a file.
