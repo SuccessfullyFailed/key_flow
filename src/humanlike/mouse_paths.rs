@@ -1,4 +1,4 @@
-use super::recorder::MouseRecording;
+use super::mouse_recorder::MouseRecording;
 use rand::{rngs::ThreadRng, seq::IndexedRandom, Rng};
 use std::error::Error;
 use file_ref::FileRef;
