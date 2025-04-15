@@ -8,13 +8,15 @@ use rand::Rng;
 
 pub struct MouseRecording(Vec<MouseProgressionPath>);
 impl MouseRecording {
+	const INTERVAL:Duration = Duration::from_millis(10);
+
+
 
 	/// Create a mouse recording by playing a target practice game.
 	pub fn create(window_size:[usize; 2], target_paths_count:usize) -> Result<MouseRecording, Box<dyn Error>> {
 		use rand::prelude::ThreadRng;
 
 		// Window settings.
-		const INTERVAL:Duration = Duration::from_millis(10);
 		const PADDING:f32 = 0.1;
 		let inner_size:[usize; 4] = [
 			(window_size[0] as f32 * PADDING) as usize,
@@ -92,7 +94,7 @@ impl MouseRecording {
 			} else {
 				window.update();
 			}
-			sleep(INTERVAL);
+			sleep(Self::INTERVAL);
 		}
 
 		// Return recording.

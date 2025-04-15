@@ -1,31 +1,104 @@
 use super::recorder::MouseRecording;
-use rand::{rngs::ThreadRng, seq::IndexedRandom};
-use std::error::Error;
+use rand::{rngs::ThreadRng, seq::IndexedRandom, Rng};
+use std::{error::Error, time::Duration};
 use file_ref::FileRef;
 use cachew::cache;
 
 
 
+pub(super) const CURSOR_RECORDINGS_DIR_ENV_VAR:&str = "KEY_FLOW_HUMAN_LIKE_MOUSE_PATHS_DIR";
+const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
+
+
+
+
+/* MOUSE MOVEMENT CREATOR METHODS */
+
+/// Create a path for a mouse movement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
+pub(crate) fn create_movement_path_to(position:[i32; 2], position_randomness:[i32; 2], interval:Duration, duration:Duration, duration_randomness:Duration) -> Vec<[i32; 2]> {
+	create_movement_path(crate::mouse::get_pos(), position, position_randomness, interval, duration, duration_randomness)
+}
+
+/// Create a path for a mouse movement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
+pub(crate) fn create_movement_path(start:[i32; 2], end:[i32; 2], position_randomness:[i32; 2], interval:Duration, duration:Duration, duration_randomness:Duration) -> Vec<[i32; 2]> {
+	create_displacement_path([end[0] - start[0], end[1] - start[1]], position_randomness, interval, duration, duration_randomness)
+}
+
+/// Create a path for a mouse displacement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
+pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_randomness:[i32; 2], interval:Duration, duration:Duration, duration_randomness:Duration) -> Vec<[i32; 2]> {
+
+	// Randomize arguments.
+	let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
+	let duration_randomness_ms:u64 = duration_randomness.as_millis() as u64;
+	let displacement_random_amount:[i32; 2] = displacement_randomness.map(|value| if value == 0 { 0 } else { rng.random_range(-value..value)});
+	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement_random_amount[1]];
+	let duration:Duration = Duration::from_millis(duration.as_millis() as u64 + if duration_randomness_ms == 0 { 0 } else { rng.random_range(0..2 * duration_randomness_ms) - duration_randomness_ms / 2 });
+	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
+	
+	// Pick and parse random base path.
+	let base_path:&MouseProgressionPath = random_progression_path();
+	let base_path_len:usize = base_path.path.len();
+	let max_left_index:usize = base_path_len - 2;
+
+	// Create mouse movement curve.
+	let cursor_incrementations:f32 = duration.as_millis() as f32 / interval.as_millis() as f32;
+	let cursor_incrementation:f32 = base_path_len as f32 / cursor_incrementations;
+	let cursor_max:f32 = base_path_len as f32 - 1.0;
+	let mut cursor:f32 = cursor_incrementation;
+	let mut current_coord:[i32; 2] = [0, 0];
+	let mut path:Vec<[i32; 2]> = Vec::with_capacity(cursor_incrementations.ceil() as usize);
+	while cursor < cursor_max {
+		let left_index:usize = (cursor as usize).min(max_left_index);
+		let left:[f32; 2] = base_path.path[left_index];
+		let right:[f32; 2] = base_path.path[left_index + 1];
+		let factor:f32 = cursor % 1.0;
+
+		// Create randomized displacement based on progress through the curve.
+		let curve_coord_factor:[f32; 2] = [left[0] + (right[0] - left[0]) * factor, left[1] + (right[1] - left[1]) * factor];
+		let target_coord:[i32; 2] = [(curve_coord_factor[0] * displacement_f32[0]) as i32, (curve_coord_factor[1] * displacement_f32[1]) as i32];
+		let step_displacement:[i32; 2] = [target_coord[0] - current_coord[0], target_coord[1] - current_coord[1]];
+		path.push(step_displacement);
+		current_coord = target_coord;
+
+		cursor += cursor_incrementation;
+	}
+	path.push([displacement[0] - current_coord[0], displacement[1] - current_coord[1]]);
+
+	// Return curve.
+	path
+}
+
+
+
+
+/* STORED PROGRESSION PATH LOADING */
+
 /// Get a random mouse progression path.
-fn random_progression_path() -> Result<&'static MouseProgressionPath, Box<dyn Error>> {
-	let available_paths:&mut Vec<MouseProgressionPath> = cache!(Vec<MouseProgressionPath>, load_progression_paths()?);
-	Ok(available_paths.choose(cache!(ThreadRng, rand::rng())).unwrap())
+fn random_progression_path() -> &'static MouseProgressionPath {
+	let available_paths:&mut Vec<MouseProgressionPath> = cache!(Vec<MouseProgressionPath>, match load_progression_paths() {
+		Ok(paths) => paths,
+		Err(error) => {
+			eprintln!("Error loading KeyFlow mouse progression paths: {error}");
+			vec![MouseProgressionPath::new(PLACEHOLDER_PATH.to_vec())]
+		}
+	});
+	available_paths.choose(cache!(ThreadRng, rand::rng())).unwrap()
 }
 
 /// Load all progression paths available in dedicated dir.
 fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>> {
-	const RECORD_MOUSE_ARG:&str = "RECORD_HUMANLIKE_MOUSE";
-	const RECORD_MOUSE_ARG_ACCEPTANCE_VALUE:&str = "1";
-	const DEFAULT_DIR:FileRef = FileRef::new_const("./target/key_flow/humanlike/mouse_paths");
+	const RECORD_CURSOR_ARG:&str = "RECORD_HUMANLIKE_MOUSE";
+	const RECORD_CURSOR_ARG_ACCEPTANCE_VALUE:&str = "1";
+	const DEFAULT_CURSOR_RECORDS_DIR:FileRef = FileRef::new_const("./target/key_flow/humanlike/mouse_paths");
 
 	// Read files.
-	let exported_paths_dir:FileRef = std::env::var("KEY_FLOW_HUMAN_LIKE_MOUSE_PATHS_DIR").map(|path| FileRef::new(&path)).unwrap_or(DEFAULT_DIR);
+	let exported_paths_dir:FileRef = std::env::var(CURSOR_RECORDINGS_DIR_ENV_VAR).map(|path| FileRef::new(&path)).unwrap_or(DEFAULT_CURSOR_RECORDS_DIR);
 	let mut exported_paths_files:Vec<FileRef> = exported_paths_dir.list_files();
 
 	// If dir doesn't exist or has no files, ask user to create a recording.
 	if !exported_paths_dir.exists() || exported_paths_files.is_empty() {
-		eprintln!("KeyFlow humanlike could not find mouse path records. Please run a keyflow mouse movement function with environment variable {} set to {}. This will start a target practice minigame that records your mouse movement to replicate personalized mouse movement.", RECORD_MOUSE_ARG, RECORD_MOUSE_ARG_ACCEPTANCE_VALUE);
-		if std::env::var(RECORD_MOUSE_ARG).map(|value| value == RECORD_MOUSE_ARG_ACCEPTANCE_VALUE).unwrap_or(false) {
+		eprintln!("KeyFlow humanlike could not find mouse path records. Please run a keyflow mouse movement function with environment variable {} set to {}. This will start a target practice minigame that records your mouse movement to replicate personalized mouse movement.", RECORD_CURSOR_ARG, RECORD_CURSOR_ARG_ACCEPTANCE_VALUE);
+		if std::env::var(RECORD_CURSOR_ARG).map(|value| value == RECORD_CURSOR_ARG_ACCEPTANCE_VALUE).unwrap_or(false) {
 			let recording:MouseRecording = MouseRecording::create([800, 600], 10)?;
 			recording.show_graph([800, 600])?;
 			recording.save_to(&exported_paths_dir)?;
@@ -36,13 +109,15 @@ fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>>
 	// Create paths.
 	let mut paths:Vec<MouseProgressionPath> = exported_paths_files.into_iter().map(|file| MouseProgressionPath::from_file(file.path())).flatten().collect();
 	if paths.is_empty() {
-		eprintln!("Could not find any mouse path records. Using linear paths for now.");
-		paths = vec![MouseProgressionPath::new(vec![[0, 0], [100, 100]])];
+		eprintln!("Could not find any mouse path records. Using default placeholder paths for now.");
+		paths = vec![MouseProgressionPath::new(PLACEHOLDER_PATH.to_vec())];
 	}
 	Ok(paths)
 }
 
 
+
+/* PROGRESSION PATH STRUCT */
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MouseProgressionPath {
@@ -67,7 +142,7 @@ impl MouseProgressionPath {
 		MouseProgressionPath {
 			start: mouse_path[start_index],
 			end: mouse_path[end_index],
-			path: mouse_path[start_index..end_index].into_iter().map(|position| [(position[0] as f32 - start_f32[0]) / (end_f32[0] - start_f32[0]), (position[1] as f32 - start_f32[1]) / (end_f32[1] - start_f32[1])]).collect()
+			path: mouse_path[start_index..end_index + 1].into_iter().map(|position| [(position[0] as f32 - start_f32[0]) / (end_f32[0] - start_f32[0]), (position[1] as f32 - start_f32[1]) / (end_f32[1] - start_f32[1])]).collect()
 		}
 	}
 
