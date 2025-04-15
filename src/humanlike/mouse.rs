@@ -18,6 +18,7 @@ pub fn displace<T>(displacement:[i32; 2], displacement_randomness:[i32; 2], inte
 pub fn move_to<T>(position:[i32; 2], position_randomness:[i32; 2], interval:T, duration:T, duration_randomness:T) where T:KeyPressDuration + 'static + Send + Sync + Clone {
 	const CORRECTION_DURATION_MULTIPLIER:f32 = 0.1;
 	const MAX_CORRECTION_ATTEMPTS:usize = 10;
+	const IS_AT_TARGET:fn([i32; 2], [i32; 2], [i32; 2]) -> bool = |current, target, random| (current[0] - target[0]).abs() < random[0] && (current[1] - target[1]).abs() < random[1];
 
 	let interval:u64 = interval.as_millis();
 	let duration:u64  = duration.as_millis();
@@ -31,7 +32,7 @@ pub fn move_to<T>(position:[i32; 2], position_randomness:[i32; 2], interval:T, d
 	// Correction movement.
 	current_position = get_pos();
 	let mut correction_attempts:usize = 0;
-	while correction_attempts < MAX_CORRECTION_ATTEMPTS && current_position != position {
+	while correction_attempts < MAX_CORRECTION_ATTEMPTS && !IS_AT_TARGET(current_position, position, position_randomness) {
 		displace([position[0] - current_position[0], position[1] - current_position[1]], [0, 0], interval, correction_duration, duration_randomness);
 		current_position = get_pos();
 		correction_attempts += 1;

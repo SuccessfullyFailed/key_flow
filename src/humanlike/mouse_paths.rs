@@ -11,26 +11,13 @@ const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
 
 
 
-
-/* MOUSE MOVEMENT CREATOR METHODS */
-
-/// Create a path for a mouse movement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
-pub(crate) fn create_movement_path_to(position:[i32; 2], position_randomness:[i32; 2], interval_ms:u64, duration_ms:u64, duration_randomness_ms:u64) -> Vec<[i32; 2]> {
-	create_movement_path(crate::mouse::get_pos(), position, position_randomness, interval_ms, duration_ms, duration_randomness_ms)
-}
-
-/// Create a path for a mouse movement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
-pub(crate) fn create_movement_path(start:[i32; 2], end:[i32; 2], position_randomness:[i32; 2], interval_ms:u64, duration_ms:u64, duration_randomness_ms:u64) -> Vec<[i32; 2]> {
-	create_displacement_path([end[0] - start[0], end[1] - start[1]], position_randomness, interval_ms, duration_ms, duration_randomness_ms)
-}
-
 /// Create a path for a mouse displacement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
 pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_randomness:[i32; 2], interval_ms:u64, duration_ms:u64, duration_randomness_ms:u64) -> Vec<[i32; 2]> {
 
 	// Randomize arguments.
 	let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
 	let displacement_random_amount:[i32; 2] = displacement_randomness.map(|value| if value == 0 { 0 } else { rng.random_range(-value..value)});
-	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement_random_amount[1]];
+	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement[1] + displacement_random_amount[1]];
 	let duration_ms:u64 = (duration_ms as i64 + if duration_randomness_ms == 0 { 0 } else { rng.random_range(0..2 * duration_randomness_ms as i64) - duration_randomness_ms as i64 / 2 }) as u64;
 	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
 	
@@ -66,11 +53,6 @@ pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_rando
 	// Return curve.
 	path
 }
-
-
-
-
-/* STORED PROGRESSION PATH LOADING */
 
 /// Get a random mouse progression path.
 fn random_progression_path() -> &'static MouseProgressionPath {
@@ -115,8 +97,6 @@ fn load_progression_paths() -> Result<Vec<MouseProgressionPath>, Box<dyn Error>>
 }
 
 
-
-/* PROGRESSION PATH STRUCT */
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MouseProgressionPath {
