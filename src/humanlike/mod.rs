@@ -1,5 +1,5 @@
 pub mod recorder;
-pub mod mouse;
+pub mod mouse_paths;
 
-mod mouse_u;
+mod mouse_paths_u;
 mod recorder_u;

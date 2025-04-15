@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-	use crate::humanlike::mouse::{ create_displacement_path, CURSOR_RECORDINGS_DIR_ENV_VAR };
+	use crate::humanlike::mouse_paths::{ create_displacement_path, CURSOR_RECORDINGS_DIR_ENV_VAR };
 	use std::time::Duration;
 
 

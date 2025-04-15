@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-	use super::super::mouse::MouseProgressionPath;
+	use super::super::mouse_paths::MouseProgressionPath;
 	use rand::{ Rng, prelude::ThreadRng };
 	use file_ref::FileRef;
 	use std::ops::Range;
