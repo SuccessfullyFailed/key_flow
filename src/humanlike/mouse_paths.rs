@@ -14,13 +14,12 @@ const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
 
 
 /// Create a path for a mouse displacement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
-pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_randomness:[i32; 2], interval_ms:u64, duration_ms:u64, duration_randomness_ms:u64) -> Vec<[i32; 2]> {
+pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_randomness:[i32; 2], interval_ms:u64, duration_ms:u64) -> Vec<[i32; 2]> {
 
 	// Randomize arguments.
 	let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
 	let displacement_random_amount:[i32; 2] = displacement_randomness.map(|value| if value == 0 { 0 } else { rng.random_range(-value..value)});
 	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement[1] + displacement_random_amount[1]];
-	let duration_ms:u64 = (duration_ms as i64 + if duration_randomness_ms == 0 { 0 } else { rng.random_range(0..2 * duration_randomness_ms as i64) - duration_randomness_ms as i64 / 2 }) as u64;
 	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
 	
 	// Pick and parse random base path.
@@ -127,18 +126,11 @@ impl MouseProgressionPath {
 
 	/// Create a new path from processed data.
 	fn new_processed(start:[usize; 2], end:[usize; 2], path:Vec<[f32; 2]>) -> MouseProgressionPath {
-		const MAX_ALLOWED_SPIKE:f32 = 1.6;
-
-		let mut path:MouseProgressionPath = MouseProgressionPath { start, end, path };
-
-		// If invalid sample, try to fix it.
-		let largest_spike:&f32 = path.path.iter().flatten().reduce(|a, b| if a.abs() > b.abs() { a } else { b }).unwrap_or(&0.0);
-		if largest_spike.abs() > MAX_ALLOWED_SPIKE {
-			let scale:f32 = 1.0 / largest_spike.abs() * MAX_ALLOWED_SPIKE;
-			path.path.iter_mut().flatten().for_each(|sample| *sample *= scale);
+		MouseProgressionPath {
+			start,
+			end,
+			path
 		}
-
-		path
 	}
 
 

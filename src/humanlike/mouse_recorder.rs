@@ -33,6 +33,7 @@ impl MouseRecording {
 		const TRACKING_PATH_MIN_ENTRIES:usize = 20;
 		const CURSOR_STILL_MAX_MOVEMENT:usize = 1;
 		const CURSOR_STILL_TARGET_COUNT:usize = 20;
+		const TARGET_RANGE:[f32; 2] = [-0.6, 1.6];
 		let tracking_path_min_distance:usize = inner_size[0] / 3;
 
 		// Create "target practive" window.
@@ -65,7 +66,7 @@ impl MouseRecording {
 						// If path valid, convert coordinates to progression factors and store to results.
 						move_target = true;
 						let progression_path:MouseProgressionPath = MouseProgressionPath::new(current_path);
-						if progression_path.path.len() > TRACKING_PATH_MIN_ENTRIES && source != [0; 2] {
+						if progression_path.path.len() > TRACKING_PATH_MIN_ENTRIES && source != [0; 2] && progression_path.path.iter().all(|factor| factor[0] > TARGET_RANGE[0] && factor[1] > TARGET_RANGE[0] && factor[0] < TARGET_RANGE[1] && factor[1] < TARGET_RANGE[1]) {
 							paths.push(progression_path);
 						}
 						current_path = Vec::with_capacity(TRACKING_PATH_INITIAL_VEC_SIZE);

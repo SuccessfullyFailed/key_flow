@@ -1,6 +1,8 @@
+use cachew::cache;
+use rand::{rngs::ThreadRng, Rng};
 use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
-use std::{ mem, ptr, thread::{ self, sleep }, time::Duration };
-use crate::{ key_hook::{self, handle_virtual_key_alteration}, U256 };
+use std::{ mem, ops::Range, ptr, thread::{ self, sleep }, time::Duration };
+use crate::{ key_hook::{ self, handle_virtual_key_alteration }, U256 };
 
 
 
@@ -139,5 +141,17 @@ impl KeyPressDuration for u64 {
 	}
 	fn is_empty(&self) -> bool {
 		*self == 0
+	}
+}
+impl<T> KeyPressDuration for Range<T> where T:KeyPressDuration + PartialEq {
+	fn as_duration(&self) -> Duration {
+		Duration::from_millis(self.as_millis())
+	}
+	fn as_millis(&self) -> u64 {
+		let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
+		rng.random_range(self.start.as_millis()..self.end.as_millis())
+	}
+	fn is_empty(&self) -> bool {
+		self.start == self.end
 	}
 }
