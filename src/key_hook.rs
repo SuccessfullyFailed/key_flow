@@ -1,12 +1,12 @@
 use winapi::{shared::{minwindef::{LPARAM, LRESULT, WPARAM}, windef::HHOOK__}, um::winuser::{CallNextHookEx, KBDLLHOOKSTRUCT, LLKHF_INJECTED, LLMHF_INJECTED, MSLLHOOKSTRUCT, WM_KEYDOWN, WM_KEYUP}};
 use std::{ptr, sync::{Mutex, MutexGuard}};
-use crate::{Key, U256};
+use crate::{Key, KeyPattern};
 
 
 
 static LISTENER_THREAD_ID:Mutex<Option<u32>> = Mutex::new(None);
-static mut PHYSICAL_KEY_STATES:U256 = U256::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
-static mut VIRTUAL_KEY_STATES:U256 = U256::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
+static mut PHYSICAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
+static mut VIRTUAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
 
 
 
@@ -132,10 +132,10 @@ pub(crate) fn handle_virtual_key_alteration(key_code:u8, down:bool) {
 
 /// Get the key state of a key.
 pub fn get_key_state(key_code:u8) -> bool {
-	unsafe { PHYSICAL_KEY_STATES & Key::new(key_code).as_pattern() != U256::ZERO }
+	unsafe { PHYSICAL_KEY_STATES & Key::new(key_code).as_pattern() != KeyPattern::ZERO }
 }
 
 /// Get the virtual key state of a key (programatically pressed).
 pub fn get_virtual_key_state(key_code:u8) -> bool {
-	unsafe { VIRTUAL_KEY_STATES & Key::new(key_code).as_pattern() != U256::ZERO }
+	unsafe { VIRTUAL_KEY_STATES & Key::new(key_code).as_pattern() != KeyPattern::ZERO }
 }

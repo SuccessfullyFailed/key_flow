@@ -1,5 +1,5 @@
 use std::sync::{ Mutex, MutexGuard };
-use crate::{ Key, U256 };
+use crate::{ Key, KeyPattern };
 
 
 
@@ -9,7 +9,7 @@ pub(crate) static REGISTERED_HOTKEYS:Mutex<Vec<Hotkey>> = Mutex::new(Vec::new())
 
 pub struct Hotkey {
 	id:u64,
-	key_pattern:U256,
+	key_pattern:KeyPattern,
 	on_press:Option<Box<dyn Fn() + Send + Sync>>,
 	on_release:Option<Box<dyn Fn() + Send + Sync>>,
 	blocking:bool,
@@ -102,7 +102,7 @@ impl Hotkey {
 	}
 
 	/// Update the current state. Returns true if hotkey blocks.
-	pub(crate) fn update_state(&mut self, active_pattern:&U256) -> bool {
+	pub(crate) fn update_state(&mut self, active_pattern:&KeyPattern) -> bool {
 		if !self.enabled { return false; }
 		let new_state:bool = self.key_pattern & *active_pattern == self.key_pattern;
 		if new_state != self.state {
