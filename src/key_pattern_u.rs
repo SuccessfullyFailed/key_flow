@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-	use crate::KeyPattern;
+	use crate::{ Key, KeyPattern };
 
 
 
@@ -37,5 +37,13 @@ mod tests {
 	#[test]
 	fn test_key_pattern_shift_right() {
 		assert_eq!(KeyPattern::new(1, 0) >> 128, KeyPattern::new(0, 1));
+	}
+
+	#[test]
+	fn test_all_keys_to_pattern() {
+		for key_code in 0..0xFF {
+			println!("Converting key with code {} to pattern.", key_code);
+			Key::new(key_code).as_pattern();
+		}
 	}
 }

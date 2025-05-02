@@ -23,7 +23,13 @@ impl Key {
 
 	/// Return the key as a pattern.
 	pub fn as_pattern(&self) -> KeyPattern {
-		if self.0 < 128 { KeyPattern::new(0, 1 << (self.0 - 1)) } else { KeyPattern::new(1 << (self.0 - 129), 1 << (self.0 - 1)) }
+		if self.0 == 0 {
+			KeyPattern::new(0, 0)
+		} else if self.0 < 129 {
+			KeyPattern::new(0, 1 << (self.0 - 1))
+		} else {
+			KeyPattern::new(1 << (self.0 - 129), 0)
+		}
 	}
 
 	/// Check if the key is down.
