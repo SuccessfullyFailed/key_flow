@@ -1,5 +1,5 @@
-use crate::{ humanlike::mouse_paths, keys::LBUTTON, mouse, RandomizableCoordinate, RandomizableDuration };
-use std::{thread::sleep, time::Duration};
+use crate::{ sleep, humanlike::mouse_paths, keys::LBUTTON, mouse, RandomizableCoordinate, RandomizableDuration };
+use std::time::Duration;
 
 
 

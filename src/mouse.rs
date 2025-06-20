@@ -1,6 +1,5 @@
 use winapi::{ shared::windef::POINT, um::winuser::{ mouse_event, GetCursorPos, SetCursorPos } };
-use crate::{ keys::LBUTTON, RandomizableDuration };
-use std::thread::sleep;
+use crate::{ sleep, keys::LBUTTON, RandomizableDuration };
 
 
 

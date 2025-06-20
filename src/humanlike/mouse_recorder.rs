@@ -1,6 +1,6 @@
-use std::{ error::Error, thread::sleep, time::Duration };
+use crate::{ sleep, humanlike::mouse_paths::MouseProgressionPath };
 use minifb::{ Window, WindowOptions, MouseMode };
-use super::mouse_paths::MouseProgressionPath;
+use std::{ error::Error, time::Duration };
 use file_ref::FileRef;
 use rand::Rng;
 

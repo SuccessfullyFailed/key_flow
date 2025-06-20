@@ -11,6 +11,5 @@ mod spin_sleep_test {
 			sleep(*sleep_time);
 			assert_eq!(test_start.elapsed().as_millis() as u64, *sleep_time);
 		}
-
 	}
 }
