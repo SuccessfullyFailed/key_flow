@@ -16,3 +16,10 @@ pub use arg_traits::*;
 
 #[cfg(feature="humanlike")]
 pub mod humanlike;
+
+#[cfg(feature="sleep")]
+mod sleep;
+#[cfg(feature="sleep")]
+pub use sleep::*;
+#[cfg(feature="sleep")]
+mod sleep_u;

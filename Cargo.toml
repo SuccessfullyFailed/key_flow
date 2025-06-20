@@ -4,6 +4,7 @@ version = "0.1.2"
 edition = "2024"
 
 [dependencies]
+windows-sys={ version="0.60.1", features=["Win32_Foundation", "Win32_Security", "Win32_System", "Win32_System_Threading", "Win32_Media"], optional=true }
 winapi={ version = "0.3.9", features = ["winuser", "processthreadsapi", "errhandlingapi"] }
 file_ref={ git="https://github.com/SuccessfullyFailed/file_ref", optional=true }
 cachew={ git="https://github.com/SuccessfullyFailed/cachew" }
@@ -11,5 +12,6 @@ minifb={ version="0.28.0", optional=true }
 rand={ version="0.9.0" }
 
 [features]
-default = ["humanlike"]
+default=["humanlike", "sleep"]
 humanlike=["dep:file_ref", "dep:minifb"]
+sleep=["dep:windows-sys"]
