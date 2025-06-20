@@ -1,5 +1,5 @@
 use winapi::{ shared::windef::POINT, um::winuser::{ mouse_event, GetCursorPos, SetCursorPos } };
-use crate::{ key::KeyPressDuration, keys::LBUTTON };
+use crate::{ keys::LBUTTON, RandomizableDuration };
 use std::thread::sleep;
 
 
@@ -22,7 +22,7 @@ pub fn get_pos() -> [i32; 2] {
 }
 
 /// Click at a specific location without moving the cursor.
-pub fn click<T>(position:[i32; 2], duration:T) where T:KeyPressDuration + 'static + Send + Sync {
+pub fn click<T>(position:[i32; 2], duration:T) where T:RandomizableDuration + 'static + Send + Sync {
 	let original_pos:[i32; 2] = get_pos();
 	move_to(position);
 	LBUTTON.send_await(duration);
@@ -30,7 +30,7 @@ pub fn click<T>(position:[i32; 2], duration:T) where T:KeyPressDuration + 'stati
 }
 
 /// Drag the mouse from one point to another.
-pub fn drag<T>(start:[i32; 2], end:[i32; 2], press_duration:T) where T:KeyPressDuration + 'static + Send + Sync {
+pub fn drag<T>(start:[i32; 2], end:[i32; 2], press_duration:T) where T:RandomizableDuration + 'static + Send + Sync {
 	move_to(start);
 	LBUTTON.press();
 	sleep(press_duration.as_duration());

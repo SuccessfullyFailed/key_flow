@@ -1,5 +1,5 @@
-use rand::{ rngs::ThreadRng, seq::IndexedRandom, Rng };
-use super::mouse_recorder::MouseRecording;
+use crate::{ humanlike::mouse_recorder::MouseRecording, RandomizableCoordinate, RandomizableDuration };
+use rand::{ rngs::ThreadRng, seq::IndexedRandom };
 use file_ref::FileRef;
 use std::error::Error;
 use cachew::cache;
@@ -14,12 +14,10 @@ const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
 
 
 /// Create a path for a mouse displacement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
-pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_randomness:[i32; 2], interval_ms:u64, duration_ms:u64) -> Vec<[i32; 2]> {
+pub(crate) fn create_displacement_path<T, U, V>(displacement:T, interval:U, duration:V) -> Vec<[i32; 2]> where T:RandomizableCoordinate, U:RandomizableDuration, V:RandomizableDuration {
 
 	// Randomize arguments.
-	let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
-	let displacement_random_amount:[i32; 2] = displacement_randomness.map(|value| if value == 0 { 0 } else { rng.random_range(-value..value)});
-	let displacement:[i32; 2] = [displacement[0] + displacement_random_amount[0], displacement[1] + displacement_random_amount[1]];
+	let displacement:[i32; 2] = displacement.get_value();
 	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
 	
 	// Pick and parse random base path.
@@ -28,7 +26,7 @@ pub(crate) fn create_displacement_path(displacement:[i32; 2], displacement_rando
 	let max_left_index:usize = base_path_len - 2;
 
 	// Create mouse movement curve.
-	let cursor_incrementations:f32 = duration_ms as f32 / interval_ms as f32;
+	let cursor_incrementations:f32 = duration.as_millis() as f32 / interval.as_millis() as f32;
 	let cursor_incrementation:f32 = base_path_len as f32 / cursor_incrementations;
 	let cursor_max:f32 = base_path_len as f32 - 1.0;
 	let mut cursor:f32 = cursor_incrementation;

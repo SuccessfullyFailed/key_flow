@@ -1,8 +1,6 @@
-use cachew::cache;
-use rand::{rngs::ThreadRng, Rng};
 use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
-use std::{ mem, ops::Range, ptr, thread::{ self, sleep }, time::Duration };
-use crate::{ key_hook::{ self, handle_virtual_key_alteration }, KeyPattern };
+use crate::{ key_hook::{ self, handle_virtual_key_alteration }, KeyPattern, RandomizableDuration };
+use std::{ mem, ptr, thread::{ self, sleep } };
 
 
 
@@ -58,7 +56,7 @@ impl Key {
 	}
 
 	/// Send the key.
-	pub fn send<T>(&self, duration:T) where T:KeyPressDuration + Send + 'static {
+	pub fn send<T>(&self, duration:T) where T:RandomizableDuration + Send + 'static {
 		if duration.is_empty() {
 			self.press();
 			self.release();
@@ -73,7 +71,7 @@ impl Key {
 	}
 
 	/// Send the key and wait until the key is released.
-	pub fn send_await<T>(&self, duration:T) where T:KeyPressDuration + Send + 'static {
+	pub fn send_await<T>(&self, duration:T) where T:RandomizableDuration + 'static {
 		if duration.is_empty() {
 			self.press();
 			self.release();
@@ -117,47 +115,5 @@ impl Key {
 			ptr::write(&mut input_record.u as *mut _ as *mut MOUSEINPUT, input);
 			SendInput(1, &mut input_record, mem::size_of::<INPUT>() as i32);
 		}
-	}
-}
-
-
-
-pub trait KeyPressDuration {
-	fn as_duration(&self) -> Duration;
-	fn as_millis(&self) -> u64;
-	fn is_empty(&self) -> bool;
-}
-impl KeyPressDuration for Duration {
-	fn as_duration(&self) -> Duration {
-		self.clone()
-	}
-	fn as_millis(&self) -> u64 {
-		Duration::as_millis(&self) as u64
-	}
-	fn is_empty(&self) -> bool {
-		self.as_millis() == 0
-	}
-}
-impl KeyPressDuration for u64 {
-	fn as_duration(&self) -> Duration {
-		Duration::from_millis(*self)
-	}
-	fn as_millis(&self) -> u64 {
-		*self
-	}
-	fn is_empty(&self) -> bool {
-		*self == 0
-	}
-}
-impl<T> KeyPressDuration for Range<T> where T:KeyPressDuration + PartialEq {
-	fn as_duration(&self) -> Duration {
-		Duration::from_millis(self.as_millis())
-	}
-	fn as_millis(&self) -> u64 {
-		let rng:&mut ThreadRng = cache!(ThreadRng, rand::rng());
-		rng.random_range(self.start.as_millis()..self.end.as_millis())
-	}
-	fn is_empty(&self) -> bool {
-		self.start == self.end
 	}
 }

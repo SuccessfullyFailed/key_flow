@@ -1,6 +1,6 @@
-use winapi::{shared::{minwindef::{LPARAM, LRESULT, WPARAM}, windef::HHOOK__}, um::winuser::{CallNextHookEx, KBDLLHOOKSTRUCT, LLKHF_INJECTED, LLMHF_INJECTED, MSLLHOOKSTRUCT, WM_KEYDOWN, WM_KEYUP}};
-use std::{ptr, sync::{Mutex, MutexGuard}};
-use crate::{Key, KeyPattern};
+use winapi::{ shared::{ minwindef::{ LPARAM, LRESULT, WPARAM }, windef::HHOOK__ }, um::winuser::{ CallNextHookEx, KBDLLHOOKSTRUCT, LLKHF_INJECTED, LLMHF_INJECTED, MSLLHOOKSTRUCT, WM_KEYDOWN, WM_KEYUP } };
+use std::{ ptr, sync::{ Mutex, MutexGuard } };
+use crate::{ Key, KeyPattern };
 
 
 
@@ -55,6 +55,8 @@ unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LP
 	if key_code >= 0 {
 		if let Some((key, down)) = params_to_key_alteration(w_param as u32, l_param) {
 			handle_key_alteration(key, down);
+
+			// Update hotkeys.
 			for hotkey in REGISTERED_HOTKEYS.lock().unwrap().iter_mut().filter(|hotkey| hotkey.enabled()) {
 				if hotkey.update_state(unsafe { &PHYSICAL_KEY_STATES }) {
 					blocking = true;
