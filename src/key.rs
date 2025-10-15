@@ -4,7 +4,7 @@ use std::{ mem, ptr, thread };
 
 
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Key(u8);
 impl Key {
 
