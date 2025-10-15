@@ -42,6 +42,26 @@ impl KeyPattern {
 		let high = self.high * rhs.low + self.low * rhs.high + carry as u128;
 		(KeyPattern { high, low }, high > 0)
 	}
+
+
+
+	/* USAGE METHODS */
+
+	/// Convert the pattern to a list of keys.
+	pub fn as_keys(&self) -> Vec<Key> {
+		let mut keys:Vec<Key> = Vec::new();
+		for index in 0..128 {
+			if self.low >> index & 1 == 1 {
+				keys.push(Key::new(index + 1));
+			}
+		}
+		for index in 0..128 {
+			if self.high >> index & 1 == 1 {
+				keys.push(Key::new(index + 129));
+			}
+		}
+		keys
+	}
 }
 impl Default for KeyPattern {
 	fn default() -> KeyPattern {

@@ -74,4 +74,11 @@ mod tests {
 			Key::new(key_code).as_pattern();
 		}
 	}
+
+	#[test]
+	fn test_pattern_to_key_list() {
+		let key_codes:[u8; 6] = [3, 6, 9, 22, 127, 255];
+		let pattern:KeyPattern = key_codes.iter().map(|code| Key::new(*code).as_pattern()).reduce(|a, b| a | b).unwrap();
+		assert_eq!(pattern.as_keys(), key_codes.iter().map(|code| Key::new(*code)).collect::<Vec<Key>>());
+	}
 }
