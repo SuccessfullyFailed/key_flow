@@ -57,7 +57,7 @@ unsafe extern "system" fn hook_callback(key_code:i32, w_param:WPARAM, l_param:LP
 			handle_key_alteration(key, down);
 
 			// Update hotkeys.
-			for hotkey in REGISTERED_HOTKEYS.lock().unwrap().iter_mut().filter(|hotkey| hotkey.enabled()) {
+			for hotkey in unsafe { REGISTERED_HOTKEYS.iter_mut().filter(|hotkey| hotkey.enabled()) } {
 				if hotkey.update_state(unsafe { &PHYSICAL_KEY_STATES }) {
 					blocking = true;
 				}
