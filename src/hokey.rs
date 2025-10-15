@@ -36,21 +36,27 @@ impl Hotkey {
 		}
 	}
 
-	/// Set the press handler of the hotkey.
+	/// Return self with a handler that triggers when all keys are pressed.
 	pub fn on_press<T>(mut self, handler:T) -> Self where T:Fn() + 'static + Send + Sync {
 		self.on_press = Some(Box::new(handler));
 		self
 	}
 
-	/// Set the release handler of the hotkey.
+	/// Return self with a handler that triggers when any of the keys are released after they were all held.
 	pub fn on_release<T>(mut self, handler:T) -> Self where T:Fn() + 'static + Send + Sync {
 		self.on_release = Some(Box::new(handler));
 		self
 	}
 
-	/// Set the hotkeys blocking state. This will stop other processes from receiving the pressed hotkey.
+	/// Return self with blocking set to true. This will stop other processes from receiving the pressed hotkey.
 	pub fn blocking(mut self) -> Self {
 		self.blocking = true;
+		self
+	}
+
+	/// Return self, but disabled.
+	pub fn disabled(mut self) -> Self {
+		self.enabled = false;
 		self
 	}
 
