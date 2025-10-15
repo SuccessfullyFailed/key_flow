@@ -17,16 +17,44 @@ mod tests {
 	#[test]
 	fn test_key_pattern_bitwise_and() {
 		assert_eq!(KeyPattern::new(0b1100, 0b1010) & KeyPattern::new(0b1010, 0b1100), KeyPattern::new(0b1000, 0b1000));
+		assert_eq!(KeyPattern::new(0b1100, 0b1010) & Key::new(0b0010), KeyPattern::new(0b0000, 0b0010));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value &= KeyPattern::new(0b1010, 0b1100);
+		assert_eq!(value, KeyPattern::new(0b1000, 0b1000));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value &= Key::new(0b0010);
+		assert_eq!(value, KeyPattern::new(0b0000, 0b0010));
 	}
 
 	#[test]
 	fn test_key_pattern_bitwise_or() {
 		assert_eq!(KeyPattern::new(0b1100, 0b1010) | KeyPattern::new(0b1010, 0b1100), KeyPattern::new(0b1110, 0b1110));
+		assert_eq!(KeyPattern::new(0b1100, 0b1010) | Key::new(0b0001), KeyPattern::new(0b1100, 0b1011));
+		assert_eq!(KeyPattern::new(0b1100, 0b1010) | Key::new(0b0010), KeyPattern::new(0b1100, 0b1010));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value |= KeyPattern::new(0b1010, 0b1100);
+		assert_eq!(value, KeyPattern::new(0b1110, 0b1110));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value |= Key::new(0b0001);
+		assert_eq!(value, KeyPattern::new(0b1100, 0b1011));
 	}
 
 	#[test]
 	fn test_key_pattern_bitwise_xor() {
 		assert_eq!(KeyPattern::new(0b1100, 0b1010) ^ KeyPattern::new(0b1010, 0b1100), KeyPattern::new(0b0110, 0b0110));
+		assert_eq!(KeyPattern::new(0b1100, 0b1010) ^ Key::new(0b0001), KeyPattern::new(0b1100, 0b1011));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value ^= KeyPattern::new(0b1010, 0b1100);
+		assert_eq!(value, KeyPattern::new(0b0110, 0b0110));
+
+		let mut value:KeyPattern = KeyPattern::new(0b1100, 0b1010);
+		value ^= Key::new(0b0001);
+		assert_eq!(value, KeyPattern::new(0b1100, 0b1011));
 	}
 
 	#[test]
