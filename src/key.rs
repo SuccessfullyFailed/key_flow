@@ -19,6 +19,11 @@ impl Key {
 
 	/* USAGE METHODS */
 
+	/// Get the Key-code of the key.
+	pub fn key_code(&self) -> u8 {
+		self.0
+	}
+
 	/// Return the key as a pattern.
 	pub fn as_pattern(&self) -> KeyPattern {
 		if self.0 == 0 {
@@ -93,7 +98,7 @@ impl Key {
 	
 
 
-	/* WINDOWS EVENT METHPDS */
+	/* WINDOWS EVENT METHODS */
 
 	/// Create a windows keyboard event.
 	#[allow(invalid_value)]
