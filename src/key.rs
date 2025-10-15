@@ -4,7 +4,7 @@ use std::{ mem, ptr, thread };
 
 
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Key(u8);
 impl Key {
 
@@ -115,5 +115,10 @@ impl Key {
 			ptr::write(&mut input_record.u as *mut _ as *mut MOUSEINPUT, input);
 			SendInput(1, &mut input_record, mem::size_of::<INPUT>() as i32);
 		}
+	}
+}
+impl PartialEq for Key {
+	fn eq(&self, other:&Self) -> bool {
+		self.0 == other.0
 	}
 }
