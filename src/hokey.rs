@@ -64,7 +64,7 @@ impl Hotkey {
 		let handle:HotkeyHandle = HotkeyHandle(self.id);
 
 		let mut hotkey_list:MutexGuard<'_, Vec<Hotkey>> = REGISTERED_HOTKEYS.lock().unwrap();
-		if let Some(existing_index) = hotkey_list.iter().position(|hotkey| hotkey == hotkey) {
+		if let Some(existing_index) = hotkey_list.iter().position(|existing_hotkey| existing_hotkey == &self) {
 			hotkey_list[existing_index] = self;
 		} else {
 			hotkey_list.push(self);
@@ -75,7 +75,7 @@ impl Hotkey {
 
 
 
-	/* PROPERTY GETTER METHPDS */
+	/* PROPERTY GETTER METHODS */
 
 	/// Wether or not the hotkey is enabled.
 	pub fn enabled(&self) -> bool {

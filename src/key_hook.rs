@@ -109,9 +109,9 @@ fn params_to_key_alteration(w_param:u32, l_param:LPARAM) -> Option<(u8, bool)> {
 pub(crate) fn handle_key_alteration(key_code:u8, down:bool) {
 	unsafe {
 		if down {
-			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES ^ Key::new(key_code).as_pattern();
+			PHYSICAL_KEY_STATES |= Key::new(key_code);
 		} else {
-			PHYSICAL_KEY_STATES = PHYSICAL_KEY_STATES & !Key::new(key_code).as_pattern();
+			PHYSICAL_KEY_STATES &= !Key::new(key_code).as_pattern();
 		}
 	}
 }
