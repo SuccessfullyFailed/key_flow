@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test {
 	use crate::humanlike::mouse_paths::{ create_displacement_path, CURSOR_RECORDINGS_DIR_ENV_VAR, RECORD_CURSOR_ARG, RECORD_CURSOR_ARG_ACCEPTANCE_VALUE };
+	use std::time::Duration;
 
 
 	
@@ -16,7 +17,7 @@ mod test {
 		unsafe { env::set_var(CURSOR_RECORDINGS_DIR_ENV_VAR, "fake_dir/that_triggers/default_linear_curve"); }
 
 		// Create path.
-		let path:Vec<[i32; 2]> = create_displacement_path([100, 100], 100, 1000);
+		let path:Vec<[i32; 2]> = create_displacement_path([100, 100], Duration::from_millis(100), Duration::from_millis(1000));
 		assert_eq!(&path, &[[15, 15], [15, 15], [15, 15], [15, 15], [15, 15], [15, 15], [10, 10]]);
 
 		// Restore env var value.

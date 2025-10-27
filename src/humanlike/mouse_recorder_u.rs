@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
 	use super::super::mouse_paths::MouseProgressionPath;
-	use rand::{ Rng, prelude::ThreadRng };
+	use mini_rand::RandomNumber;
 	use file_ref::FileRef;
 	use std::ops::Range;
 
@@ -11,8 +11,7 @@ mod tests {
 	fn random_mouse_progression_path() -> MouseProgressionPath {
 		const RAND_POSITION_RANGE:Range<usize> = 0..500;
 
-		let mut rng:ThreadRng = rand::rng();
-		MouseProgressionPath::new((0..500).map(|_| [rng.random_range(RAND_POSITION_RANGE), rng.random_range(RAND_POSITION_RANGE)]).collect())
+		MouseProgressionPath::new((0..500).map(|_| [usize::random_range(RAND_POSITION_RANGE), usize::random_range(RAND_POSITION_RANGE)]).collect())
 	}
 
 	#[test]

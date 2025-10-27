@@ -1,8 +1,8 @@
 use crate::{ sleep, humanlike::mouse_paths::MouseProgressionPath };
 use minifb::{ Window, WindowOptions, MouseMode };
 use std::{ error::Error, time::Duration };
+use mini_rand::RandomNumber;
 use file_ref::FileRef;
-use rand::Rng;
 
 
 
@@ -14,7 +14,6 @@ impl MouseRecording {
 
 	/// Create a mouse recording by playing a target practice game.
 	pub fn create(window_size:[usize; 2], target_paths_count:usize) -> Result<MouseRecording, Box<dyn Error>> {
-		use rand::prelude::ThreadRng;
 
 		// Window settings.
 		const PADDING:f32 = 0.1;
@@ -46,7 +45,6 @@ impl MouseRecording {
 		let mut paths:Vec<MouseProgressionPath> = Vec::new();
 
 		// Keep updating window.
-		let mut rng:ThreadRng = rand::rng();
 		while window.is_open() && paths.len() < target_paths_count {
 
 			// Track mouse.
@@ -82,7 +80,7 @@ impl MouseRecording {
 			if source == target || move_target {
 				source = cursor_position;
 				while source[0].max(target[0]) - source[0].min(target[0]) < tracking_path_min_distance && source[1].max(target[1]) - source[1].min(target[1]) < tracking_path_min_distance {
-					target = [rng.random_range(inner_size[0]..inner_size[0] + inner_size[2] - TARGET_SIZE), rng.random_range(inner_size[1]..inner_size[1] + inner_size[3] - TARGET_SIZE)];
+					target = [usize::random_range(inner_size[0]..inner_size[0] + inner_size[2] - TARGET_SIZE), usize::random_range(inner_size[1]..inner_size[1] + inner_size[3] - TARGET_SIZE)];
 				}
 				let mut buffer:Vec<u32> = vec![BACKGROUND_COLOR; window_size[0] * window_size[1]];
 				for y in target[1]..target[1] + TARGET_SIZE {

@@ -1,6 +1,7 @@
 use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
-use crate::{ sleep, key_hook::{ self, handle_virtual_key_alteration }, KeyPattern, RandomizableDuration };
-use std::{ mem, ptr, thread };
+use crate::{ sleep, key_hook::{ self, handle_virtual_key_alteration }, KeyPattern };
+use std::{ mem, ptr, thread, time::Duration };
+use mini_rand::Randomizable;
 
 
 
@@ -61,28 +62,30 @@ impl Key {
 	}
 
 	/// Send the key.
-	pub fn send<T>(&self, duration:T) where T:RandomizableDuration + Send + 'static {
-		if duration.is_empty() {
+	pub fn send<T>(&self, duration:T) where T:Randomizable<Duration> {
+		let duration:Duration = duration.randomizable_value();
+		if duration.is_zero() {
 			self.press();
 			self.release();
 		} else {
 			let key:Key = self.clone();
 			thread::spawn(move || {
 				key.press();
-				sleep(duration.as_duration());
+				sleep(duration);
 				key.release();
 			});
 		}
 	}
 
 	/// Send the key and wait until the key is released.
-	pub fn send_await<T>(&self, duration:T) where T:RandomizableDuration + 'static {
-		if duration.is_empty() {
+	pub fn send_await<T>(&self, duration:T) where T:Randomizable<Duration> {
+		let duration:Duration = duration.randomizable_value();
+		if duration.is_zero() {
 			self.press();
 			self.release();
 		} else {
 			self.press();
-			sleep(duration.as_duration());
+			sleep(duration.randomizable_value());
 			self.release();
 		}
 	}

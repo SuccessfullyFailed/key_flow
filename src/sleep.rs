@@ -1,26 +1,29 @@
-use crate::RandomizableDuration;
+use mini_rand::Randomizable;
+use std::time::Duration;
 
 
 
 /// Sleep for the given duration. Will use the more accurate custom method if "sleep" feature is enabled. Otherwise will fallback to std::thread::sleep method.
-pub fn sleep<T>(duration:T) where T:RandomizableDuration {
+pub fn sleep<T>(duration:T) where T:Randomizable<Duration> {
 	#[cfg(feature="sleep")]
 	custom_sleep::sleep(duration);
 	#[cfg(not(feature="sleep"))]
-	std::thread::sleep(duration.as_duration());
+	std::thread::sleep(duration.randomizable_value());
 }
 
 #[cfg(feature="sleep")]
 mod custom_sleep {
 	use windows_sys::Win32::{ Foundation::FALSE, Media::{ timeGetDevCaps, TIMECAPS, TIMERR_NOERROR }, System::Threading::{ CreateWaitableTimerExW, SetWaitableTimer, WaitForSingleObject, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, INFINITE, TIMER_ALL_ACCESS } };
 	use std::{ error::Error, ffi::c_void, mem, ptr::null, sync::{ Mutex, MutexGuard }, time::{ Duration, Instant } };
-	use crate::RandomizableDuration;
+	use mini_rand::Randomizable;
+
+	
 
 	/// A more accurate version of std::thread::sleep.
-	pub fn sleep<T>(duration:T) where T:RandomizableDuration {
+	pub fn sleep<T>(duration:T) where T:Randomizable<Duration> {
 
 		// Get sleeping arguments.
-		let duration:Duration = duration.as_duration();
+		let duration:Duration = duration.randomizable_value();
 		let native_accuracy:u64 = windows_native_sleep_accuracy_nanoseconds();
 		let deadline:Instant = Instant::now() + duration;
 		let accuracy:Duration = Duration::from_nanos(native_accuracy);

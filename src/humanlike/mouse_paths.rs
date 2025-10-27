@@ -1,7 +1,7 @@
-use crate::{ humanlike::mouse_recorder::MouseRecording, RandomizableCoordinate, RandomizableDuration };
-use rand::{ rngs::ThreadRng, seq::IndexedRandom };
+use crate::{ humanlike::mouse_recorder::MouseRecording };
+use mini_rand::{ Randomizable, RandomChoice };
+use std::{ error::Error, time::Duration };
 use file_ref::FileRef;
-use std::error::Error;
 use cachew::cache;
 
 
@@ -14,10 +14,10 @@ const PLACEHOLDER_PATH:&[[usize; 2]]  = &[[0, 0], [50, 50], [100, 100]];
 
 
 /// Create a path for a mouse displacement using a random progression path curve. The returned values are relative displacement, not absolute coordinates.
-pub(crate) fn create_displacement_path<T, U, V>(displacement:T, interval:U, duration:V) -> Vec<[i32; 2]> where T:RandomizableCoordinate, U:RandomizableDuration, V:RandomizableDuration {
+pub(crate) fn create_displacement_path<T, U, V>(displacement:T, interval:U, duration:V) -> Vec<[i32; 2]> where T:Randomizable<[i32; 2]>, U:Randomizable<Duration>, V:Randomizable<Duration> {
 
 	// Randomize arguments.
-	let displacement:[i32; 2] = displacement.get_value();
+	let displacement:[i32; 2] = displacement.randomizable_value();
 	let displacement_f32:[f32; 2] = [displacement[0] as f32, displacement[1] as f32];
 	
 	// Pick and parse random base path.
@@ -26,7 +26,7 @@ pub(crate) fn create_displacement_path<T, U, V>(displacement:T, interval:U, dura
 	let max_left_index:usize = base_path_len - 2;
 
 	// Create mouse movement curve.
-	let cursor_incrementations:f32 = duration.as_millis() as f32 / interval.as_millis() as f32;
+	let cursor_incrementations:f32 = duration.randomizable_value().as_millis() as f32 / interval.randomizable_value().as_millis() as f32;
 	let cursor_incrementation:f32 = base_path_len as f32 / cursor_incrementations;
 	let cursor_max:f32 = base_path_len as f32 - 1.0;
 	let mut cursor:f32 = cursor_incrementation;
@@ -62,7 +62,7 @@ fn random_progression_path() -> &'static MouseProgressionPath {
 			vec![MouseProgressionPath::new(PLACEHOLDER_PATH.to_vec())]
 		}
 	});
-	available_paths.choose(cache!(ThreadRng, rand::rng())).unwrap()
+	available_paths.choose_random().unwrap()
 }
 
 /// Load all progression paths available in dedicated dir.
