@@ -7,6 +7,7 @@ edition = "2024"
 windows-sys={ version="0.60.1", features=["Win32_Foundation", "Win32_Security", "Win32_System", "Win32_System_Threading", "Win32_Media"], optional=true }
 winapi={ version = "0.3.9", features = ["winuser", "processthreadsapi", "errhandlingapi"] }
 file_ref={ git="https://github.com/SuccessfullyFailed/file_ref", optional=true }
+circular_buffer={ git="https://github.com/SuccessfullyFailed/circular_buffer" }
 mini_rand={ git="https://github.com/SuccessfullyFailed/mini_rand" }
 cachew={ git="https://github.com/SuccessfullyFailed/cachew" }
 minifb={ version="0.28.0", optional=true }

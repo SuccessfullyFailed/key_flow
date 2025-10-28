@@ -1,4 +1,4 @@
-use std::sync::{ Mutex, MutexGuard };
+use circular_buffer::CircularBuffer;
 use crate::{ Key, KeyPattern };
 
 
@@ -7,7 +7,17 @@ use crate::{ Key, KeyPattern };
 pub(crate) static mut REGISTERED_HOTKEYS:Vec<Hotkey> = Vec::new();
 
 
-enum ModificationRequest { Enable, Disable, Toggle }
+
+#[derive(Clone, Copy)]
+enum ModificationRequest { Enable, Disable, Toggle, None }
+impl Default for ModificationRequest {
+	fn default() -> Self {
+		ModificationRequest::None
+	}
+}
+const MODIFICATIONS_QUEUE_SIZE:usize = 64;
+
+
 
 pub struct Hotkey {
 	id:u64,
@@ -19,7 +29,7 @@ pub struct Hotkey {
 	enabled:bool,
 	registered:bool,
 
-	mutation_lock:Mutex<Vec<ModificationRequest>> // Modifications are requested to this queue, which will be handled int he 'update' method. Acts as a way to ensure only one modification can be done at the same time.
+	modifications_queue:CircularBuffer<ModificationRequest, MODIFICATIONS_QUEUE_SIZE> // Only one thread reads and writes this, so no async handling required
 }
 impl Hotkey {
 
@@ -38,7 +48,7 @@ impl Hotkey {
 			enabled: true,
 			registered: false,
 
-			mutation_lock: Mutex::new(Vec::new())
+			modifications_queue: CircularBuffer::new()
 		}
 	}
 
@@ -105,32 +115,30 @@ impl Hotkey {
 	/* USAGE METHODS */
 
 	/// Create a request to enable the hotkey. Will be applied on the next update.
-	pub fn enable(&self) {
-		self.mutation_lock.lock().unwrap().push(ModificationRequest::Enable);
+	pub fn enable(&mut self) {
+		self.modifications_queue.push(ModificationRequest::Enable);
 	}
 
 	/// Create a request to disable the hotkey. Will be applied on the next update.
-	pub fn disable(&self) {
-		self.mutation_lock.lock().unwrap().push(ModificationRequest::Disable);
+	pub fn disable(&mut self) {
+		self.modifications_queue.push(ModificationRequest::Disable);
 	}
 
 	/// Create a request to toggle the hotkey. Will be applied on the next update.
-	pub fn toggle(&self) {
-		self.mutation_lock.lock().unwrap().push(ModificationRequest::Toggle);
+	pub fn toggle(&mut self) {
+		self.modifications_queue.push(ModificationRequest::Toggle);
 	}
 
 	/// Update the current state. Returns true if hotkey blocks.
 	pub(crate) fn update_state(&mut self, active_pattern:&KeyPattern) -> bool {
 
-		// Get mutation lock, assuring only one modification can be made to the hotkey at a time.
-		let mut mutation_lock:MutexGuard<'_, Vec<ModificationRequest>> = self.mutation_lock.lock().unwrap();
-
 		// Handle requested modifications.
-		for modification in mutation_lock.drain(..) {
+		for modification in self.modifications_queue.take_all() {
 			match modification {
 				ModificationRequest::Enable => self.enabled = true,
 				ModificationRequest::Disable => self.enabled = false,
-				ModificationRequest::Toggle => self.enabled = !self.enabled
+				ModificationRequest::Toggle => self.enabled = !self.enabled,
+				ModificationRequest::None => {}
 			}
 		}
 
@@ -139,15 +147,10 @@ impl Hotkey {
 		let new_state:bool = self.key_pattern & *active_pattern == self.key_pattern;
 		if new_state != self.state {
 			if let Some(handler) = if new_state { &self.on_press } else { &self.on_release } {
-
-				
 				handler();
 			}
 		}
 		self.state = new_state;
-
-		// Release mutation lock.
-		drop(mutation_lock);
 
 		// Return blocking state.
 		self.state && self.blocking
