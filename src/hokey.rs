@@ -145,15 +145,17 @@ impl Hotkey {
 		// Update state.
 		if !self.enabled { return false; }
 		let new_state:bool = self.key_pattern & *active_pattern == self.key_pattern;
+		let mut executed_any:bool = false;
 		if new_state != self.state {
 			if let Some(handler) = if new_state { &self.on_press } else { &self.on_release } {
 				handler();
+				executed_any = true;
 			}
 		}
 		self.state = new_state;
 
 		// Return blocking state.
-		self.state && self.blocking
+		executed_any && self.blocking
 	}
 }
 impl PartialEq for Hotkey {
