@@ -181,16 +181,16 @@ impl HotkeyHandle {
 
 	/// Enable the hotkey.
 	pub fn enable(&mut self) {
-		self.execute(|hotkey| hotkey.enabled = true);
+		self.execute(|hotkey| hotkey.enable());
 	}
 
 	/// Disable the hotkey.
 	pub fn disable(&mut self) {
-		self.execute(|hotkey| hotkey.enabled = false);
+		self.execute(|hotkey| hotkey.disable());
 	}
 
 	/// Toggle the hotkey.
 	pub fn toggle(&mut self) {
-		self.execute(|hotkey| hotkey.enabled = !hotkey.enabled);
+		self.execute(|hotkey| hotkey.toggle());
 	}
 }
