@@ -72,6 +72,16 @@ impl KeyPattern {
 	pub fn all_pressed(&self) -> bool {
 		self.pressed_pattern() == *self
 	}
+
+	/// Press all keys in the pattern.
+	pub fn press(&self) {
+		self.as_keys().iter().for_each(|key| key.press());
+	}
+
+	/// Release all keys in the pattern.
+	pub fn release(&self) {
+		self.as_keys().iter().for_each(|key| key.release());
+	}
 }
 impl Default for KeyPattern {
 	fn default() -> KeyPattern {
