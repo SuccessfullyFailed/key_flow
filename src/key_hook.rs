@@ -5,8 +5,8 @@ use crate::{ Key, KeyPattern };
 
 
 static LISTENER_THREAD_ID:Mutex<Option<u32>> = Mutex::new(None);
-static mut PHYSICAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
-static mut VIRTUAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
+pub(crate) static mut PHYSICAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
+pub(crate) static mut VIRTUAL_KEY_STATES:KeyPattern = KeyPattern::zero(); // Used incredibly much, only has one mutable thread and has a static size and address, so do not use mutex.
 
 
 

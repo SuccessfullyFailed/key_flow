@@ -1,5 +1,5 @@
 use std::ops::{ Add, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr };
-use crate::Key;
+use crate::{ Key, key_hook::PHYSICAL_KEY_STATES };
 
 
 
@@ -61,6 +61,16 @@ impl KeyPattern {
 			}
 		}
 		keys
+	}
+
+	/// Returns self, filtered by the keys that are pressed.
+	pub fn pressed_pattern(&self) -> KeyPattern {
+		*self & unsafe { PHYSICAL_KEY_STATES }
+	}
+
+	/// Whether or not the pattern is completely pressed.
+	pub fn all_pressed(&self) -> bool {
+		self.pressed_pattern() == *self
 	}
 }
 impl Default for KeyPattern {
