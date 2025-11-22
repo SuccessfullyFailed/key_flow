@@ -1,4 +1,4 @@
-use winapi::um::winuser::{ MapVirtualKeyW, SendInput, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_XDOWN, MOUSEINPUT };
+use winapi::um::winuser::{ INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
 use crate::{ sleep, key_hook::{ self, handle_virtual_key_alteration }, KeyPattern };
 use std::{ mem, ptr, thread, time::Duration };
 use mini_rand::Randomizable;
@@ -54,7 +54,7 @@ impl Key {
 	/// Release the key.
 	pub fn release(&self) {
 		if self.0 < 6 {
-			self.create_mouse_event(match self.0 { 1 => MOUSEEVENTF_LEFTDOWN, 2 => MOUSEEVENTF_RIGHTDOWN, 4 => MOUSEEVENTF_MIDDLEDOWN, 5 => MOUSEEVENTF_XDOWN, 6 => MOUSEEVENTF_XDOWN, _ => 0 });
+			self.create_mouse_event(match self.0 { 1 => MOUSEEVENTF_LEFTUP, 2 => MOUSEEVENTF_RIGHTUP, 4 => MOUSEEVENTF_MIDDLEUP, 5 => MOUSEEVENTF_XUP, 6 => MOUSEEVENTF_XUP, _ => 0 });
 		} else {
 			self.create_keyboard_event(KEYEVENTF_KEYUP);
 		}
