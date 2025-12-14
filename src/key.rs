@@ -84,7 +84,7 @@ impl Key {
 
 
 
-	/* USAGE METHODS */
+	/* PROPERTY GETTER METHODS */
 
 	/// Get the Key-code of the key.
 	pub fn key_code(&self) -> u8 {
@@ -106,6 +106,16 @@ impl Key {
 	pub fn down(&self) -> bool {
 		key_hook::get_key_state(self.0)
 	}
+
+	/// Whether or not this key is a modifier key, a key that usually doesn't do anything on it's own, but modifies other keys. Shift or Control for example.
+	pub fn is_modifier_key(&self) -> bool {
+		const MODIFIER_KEYS:&[Key] = &[keys::SHIFT, keys::LSHIFT, keys::RSHIFT, keys::CONTROL, keys::LCONTROL, keys::RCONTROL, keys::ALT, keys::RALT, keys::LALT, keys::LWIN, keys::RWIN];
+		MODIFIER_KEYS.contains(self)
+	}
+
+
+
+	/* USAGE METHODS */
 
 	/// Press the key.
 	pub fn press(&self) {
