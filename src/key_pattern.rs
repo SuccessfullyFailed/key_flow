@@ -25,6 +25,16 @@ impl KeyPattern {
 		KeyPattern { high: 0, low: 0 }
 	}
 
+	/// Try to get a list of keys from a str.
+	pub fn from_str(source:&str) -> Vec<KeyPattern> {
+		source.chars().map(|character| KeyPattern::from_char(character)).collect()
+	}
+
+	/// Create a key-pattern from a character.
+	pub fn from_char(character:char) -> KeyPattern {
+		Key::from_char(character).into_iter().map(|key| key.as_pattern()).reduce(|a, b| a | b).unwrap_or_default()
+	}
+
 
 
 	/* MATH METHODS */
