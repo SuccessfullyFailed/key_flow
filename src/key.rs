@@ -1,7 +1,6 @@
-use winapi::um::winuser::{ INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
-use crate::{ KeyPattern, key_hook::{ self, handle_virtual_key_alteration }, keys, sleep };
-use std::{ mem, ptr, thread, time::Duration };
+use crate::{ KeyPattern, key_hook, keys };
 use mini_rand::Randomizable;
+use std::time::Duration;
 
 
 
@@ -119,86 +118,22 @@ impl Key {
 
 	/// Press the key.
 	pub fn press(&self) {
-		if self.0 < 6 {
-			self.create_mouse_event(match self.0 { 1 => MOUSEEVENTF_LEFTDOWN, 2 => MOUSEEVENTF_RIGHTDOWN, 4 => MOUSEEVENTF_MIDDLEDOWN, 5 => MOUSEEVENTF_XDOWN, 6 => MOUSEEVENTF_XDOWN, _ => 0 });
-		} else {
-			self.create_keyboard_event(0);
-		}
-		handle_virtual_key_alteration(self.0, true);
+		self.as_pattern().press();
 	}
 
 	/// Release the key.
 	pub fn release(&self) {
-		if self.0 < 6 {
-			self.create_mouse_event(match self.0 { 1 => MOUSEEVENTF_LEFTUP, 2 => MOUSEEVENTF_RIGHTUP, 4 => MOUSEEVENTF_MIDDLEUP, 5 => MOUSEEVENTF_XUP, 6 => MOUSEEVENTF_XUP, _ => 0 });
-		} else {
-			self.create_keyboard_event(KEYEVENTF_KEYUP);
-		}
-		handle_virtual_key_alteration(self.0, false);
+		self.as_pattern().release();
 	}
 
 	/// Send the key.
 	pub fn send<T>(&self, duration:T) where T:Randomizable<Duration> {
-		let duration:Duration = duration.randomizable_value();
-		if duration.is_zero() {
-			self.press();
-			self.release();
-		} else {
-			let key:Key = self.clone();
-			thread::spawn(move || {
-				key.press();
-				sleep(duration);
-				key.release();
-			});
-		}
+		self.as_pattern().send(duration);
 	}
 
 	/// Send the key and wait until the key is released.
 	pub fn send_await<T>(&self, duration:T) where T:Randomizable<Duration> {
-		let duration:Duration = duration.randomizable_value();
-		if duration.is_zero() {
-			self.press();
-			self.release();
-		} else {
-			self.press();
-			sleep(duration.randomizable_value());
-			self.release();
-		}
-	}
-
-	/// Toggle the key.
-	pub fn toggle(&self) {
-		if self.down() {
-			self.release();
-		} else {
-			self.down();
-		}
-	}
-	
-
-
-	/* WINDOWS EVENT METHODS */
-
-	/// Create a windows keyboard event.
-	#[allow(invalid_value)]
-	fn create_keyboard_event(&self, flags:u32) {
-		unsafe {
-			let input:KEYBDINPUT = KEYBDINPUT { wVk: self.0 as u16, wScan: MapVirtualKeyW(self.0 as u32, 0) as u16, dwFlags: flags, time: 0, dwExtraInfo: 0 };
-			let mut input_record:INPUT = INPUT { type_: 1, u: mem::MaybeUninit::uninit().assume_init() };
-			ptr::write(&mut input_record.u as *mut _ as *mut KEYBDINPUT, input);
-			SendInput(1, &mut input_record, mem::size_of::<INPUT>() as i32);
-		}
-	}
-
-	/// Create a windows mouse event.
-	#[allow(invalid_value)]
-	fn create_mouse_event(&self, flags:u32) {
-		unsafe {
-			let input:MOUSEINPUT = MOUSEINPUT { dx: 0, dy: 0, mouseData: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 };
-			let mut input_record = INPUT { type_: INPUT_MOUSE, u: mem::MaybeUninit::uninit().assume_init() };
-			ptr::write(&mut input_record.u as *mut _ as *mut MOUSEINPUT, input);
-			SendInput(1, &mut input_record, mem::size_of::<INPUT>() as i32);
-		}
+		self.as_pattern().send_await(duration);
 	}
 }
 impl PartialEq for Key {

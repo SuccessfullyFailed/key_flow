@@ -1,5 +1,7 @@
-use std::ops::{ Add, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr };
-use crate::{ Key, key_hook::PHYSICAL_KEY_STATES };
+use mini_rand::Randomizable;
+use winapi::um::winuser::{ INPUT, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
+use std::{ mem, ops::{ Add, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr }, ptr, thread, time::Duration };
+use crate::{ Key, key_hook::{PHYSICAL_KEY_STATES, handle_virtual_key_alteration}, sleep };
 
 
 
@@ -85,12 +87,76 @@ impl KeyPattern {
 
 	/// Press all keys in the pattern.
 	pub fn press(&self) {
-		self.as_keys().iter().for_each(|key| key.press());
+		self.create_keyboard_event(true);
 	}
 
 	/// Release all keys in the pattern.
 	pub fn release(&self) {
-		self.as_keys().iter().for_each(|key| key.release());
+		self.create_keyboard_event(false);
+	}
+
+	/// Send the key.
+	pub fn send<T>(&self, duration:T) where T:Randomizable<Duration> {
+		let duration:Duration = duration.randomizable_value();
+		if duration.is_zero() {
+			self.press();
+			self.release();
+		} else {
+			let pattern:KeyPattern = self.clone();
+			thread::spawn(move || {
+				pattern.press();
+				sleep(duration);
+				pattern.release();
+			});
+		}
+	}
+
+	/// Send the key and wait until the key is released.
+	pub fn send_await<T>(&self, duration:T) where T:Randomizable<Duration> {
+		let duration:Duration = duration.randomizable_value();
+		if duration.is_zero() {
+			self.press();
+			self.release();
+		} else {
+			self.press();
+			sleep(duration.randomizable_value());
+			self.release();
+		}
+	}
+
+	/// Create a windows keyboard event.
+	#[allow(invalid_value)]
+	fn create_keyboard_event(&self, keys_down:bool) {
+		const MOUSE_DOWN_EVENTS:[u32; 5] = [MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XDOWN];
+		const MOUSE_UP_EVENTS:[u32; 5] = [MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_XUP, MOUSEEVENTF_XUP];
+		unsafe {
+
+			// Create list of keys.
+			let mut keys:Vec<Key> = self.as_keys();
+			if !keys_down {
+				keys.reverse();
+			}
+
+			// Create inputs.
+			let mut input_records:Vec<INPUT> = keys.iter().map(|_| INPUT { type_: 1, u: mem::MaybeUninit::uninit().assume_init() }).collect();
+			for (index, key) in keys.iter().enumerate() {
+				if key.key_code() < 5  {
+					let flags:u32 = (if keys_down { MOUSE_DOWN_EVENTS } else { MOUSE_UP_EVENTS })[key.key_code() as usize];
+					let input:MOUSEINPUT = MOUSEINPUT { dx: 0, dy: 0, mouseData: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 };
+					ptr::write(&mut input_records[index].u as *mut _ as *mut MOUSEINPUT, input);
+				} else {
+					let flags:u32 = if keys_down { 0 } else { KEYEVENTF_KEYUP };
+					let input:KEYBDINPUT = KEYBDINPUT { wVk: key.key_code() as u16, wScan: MapVirtualKeyW(key.key_code() as u32, 0) as u16, dwFlags: flags, time: 0, dwExtraInfo: 0 };
+					ptr::write(&mut input_records[index].u as *mut _ as *mut KEYBDINPUT, input);
+				}
+			}
+
+			// Send all inputs at once.
+			SendInput(input_records.len() as u32, input_records.as_mut_ptr(), mem::size_of::<INPUT>() as i32);
+
+			// Update virtual keystate.
+			handle_virtual_key_alteration(self.clone(), keys_down);
+		}
 	}
 }
 impl Default for KeyPattern {
