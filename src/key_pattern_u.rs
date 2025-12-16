@@ -71,14 +71,14 @@ mod tests {
 	fn test_all_keys_to_pattern() {
 		for key_code in 0..0xFF {
 			println!("Converting key with code {} to pattern.", key_code);
-			Key::new(key_code).as_pattern();
+			Key::new(key_code).pattern();
 		}
 	}
 
 	#[test]
 	fn test_pattern_to_key_list() {
 		let key_codes:[u8; 6] = [3, 6, 9, 22, 127, 255];
-		let pattern:KeyPattern = key_codes.iter().map(|code| Key::new(*code).as_pattern()).reduce(|a, b| a | b).unwrap();
-		assert_eq!(pattern.as_keys(), key_codes.iter().map(|code| Key::new(*code)).collect::<Vec<Key>>());
+		let pattern:KeyPattern = key_codes.iter().map(|code| Key::new(*code).pattern()).reduce(|a, b| a | b).unwrap();
+		assert_eq!(pattern.keys(), key_codes.iter().map(|code| Key::new(*code)).collect::<Vec<Key>>());
 	}
 }

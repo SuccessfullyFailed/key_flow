@@ -136,7 +136,7 @@ impl InputBuilder {
 	/// Add an input from core data.
 	fn add_raw_inputs(&mut self, key:&dyn KeyOrKeyPattern, keys_down:bool, delay:u64) {
 		self.inputs.extend(
-			key.as_pattern().as_keys().into_iter().map(|key| (
+			key.as_pattern().keys().into_iter().map(|key| (
 				Self::create_raw_input(key.key_code(), keys_down),
 				delay,
 				key.key_code(),
@@ -195,6 +195,6 @@ impl KeyOrKeyPattern for KeyPattern {
 }
 impl KeyOrKeyPattern for Key {
 	fn as_pattern(&self) -> KeyPattern {
-		Key::as_pattern(self)
+		Key::pattern(self)
 	}
 }

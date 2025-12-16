@@ -111,7 +111,7 @@ pub(crate) fn handle_key_alteration(key_code:u8, down:bool) {
 		if down {
 			PHYSICAL_KEY_STATES |= Key::new(key_code);
 		} else {
-			PHYSICAL_KEY_STATES &= !Key::new(key_code).as_pattern();
+			PHYSICAL_KEY_STATES &= !Key::new(key_code).pattern();
 		}
 	}
 }
@@ -123,7 +123,7 @@ pub(crate) fn handle_virtual_key_alteration(key_code:u8, down:bool) {
 		if down {
 			VIRTUAL_KEY_STATES |= Key::new(key_code);
 		} else {
-			VIRTUAL_KEY_STATES &= !Key::new(key_code).as_pattern();
+			VIRTUAL_KEY_STATES &= !Key::new(key_code).pattern();
 		}
 	}
 }
@@ -134,10 +134,10 @@ pub(crate) fn handle_virtual_key_alteration(key_code:u8, down:bool) {
 
 /// Get the key state of a key.
 pub fn get_key_state(key_code:u8) -> bool {
-	unsafe { PHYSICAL_KEY_STATES & Key::new(key_code).as_pattern() != KeyPattern::ZERO }
+	unsafe { PHYSICAL_KEY_STATES & Key::new(key_code).pattern() != KeyPattern::ZERO }
 }
 
 /// Get the virtual key state of a key (programatically pressed).
 pub fn get_virtual_key_state(key_code:u8) -> bool {
-	unsafe { VIRTUAL_KEY_STATES & Key::new(key_code).as_pattern() != KeyPattern::ZERO }
+	unsafe { VIRTUAL_KEY_STATES & Key::new(key_code).pattern() != KeyPattern::ZERO }
 }

@@ -40,7 +40,7 @@ impl Hotkey {
 		static mut ID_GENERATOR:u64 = 0;
 		Hotkey {
 			id: unsafe { ID_GENERATOR += 1; ID_GENERATOR },
-			key_pattern: keys.iter().map(|key| key.as_pattern()).reduce(|a, b| a ^ b).unwrap_or_default(),
+			key_pattern: keys.iter().map(|key| key.pattern()).reduce(|a, b| a ^ b).unwrap_or_default(),
 			on_press: None,
 			on_release: None,
 			blocking: false,

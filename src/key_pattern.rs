@@ -33,7 +33,7 @@ impl KeyPattern {
 
 	/// Create a key-pattern from a character.
 	pub fn from_char(character:char) -> KeyPattern {
-		Key::from_char(character).into_iter().map(|key| key.as_pattern()).reduce(|a, b| a | b).unwrap_or_default()
+		Key::from_char(character).into_iter().map(|key| key.pattern()).reduce(|a, b| a | b).unwrap_or_default()
 	}
 
 
@@ -59,7 +59,7 @@ impl KeyPattern {
 	/* USAGE METHODS */
 
 	/// Convert the pattern to a list of keys.
-	pub fn as_keys(&self) -> Vec<Key> {
+	pub fn keys(&self) -> Vec<Key> {
 		let mut keys:Vec<Key> = Vec::new();
 		for index in 0..128 {
 			if self.low >> index & 1 == 1 {
@@ -100,7 +100,7 @@ impl KeyPattern {
 	}
 
 	/// Send the key-pattern in a separate thread.
-	pub fn send_send_async<T>(&self, duration:T) where T:Randomizable<Duration> {
+	pub fn send_async<T>(&self, duration:T) where T:Randomizable<Duration> {
 		InputBuilder::new().with_send(self, duration.randomizable_value().as_millis() as u64).execute_async();
 	}
 }
@@ -156,7 +156,7 @@ impl BitAnd<Key> for KeyPattern {
 	type Output = KeyPattern;
 
 	fn bitand(self, compare:Key) -> KeyPattern {
-		self & compare.as_pattern()
+		self & compare.pattern()
 	}
 }
 impl BitAndAssign<KeyPattern> for KeyPattern {
@@ -167,7 +167,7 @@ impl BitAndAssign<KeyPattern> for KeyPattern {
 }
 impl BitAndAssign<Key> for KeyPattern {
 	fn bitand_assign(&mut self, compare:Key) {
-		let compare:KeyPattern = compare.as_pattern();
+		let compare:KeyPattern = compare.pattern();
 		self.high &= compare.high;
 		self.low &= compare.low;
 	}
@@ -183,7 +183,7 @@ impl BitOr<Key> for KeyPattern {
 	type Output = KeyPattern;
 
 	fn bitor(self, compare:Key) -> KeyPattern {
-		self | compare.as_pattern()
+		self | compare.pattern()
 	}
 }
 impl BitOrAssign<KeyPattern> for KeyPattern {
@@ -194,7 +194,7 @@ impl BitOrAssign<KeyPattern> for KeyPattern {
 }
 impl BitOrAssign<Key> for KeyPattern {
 	fn bitor_assign(&mut self, compare:Key) {
-		let compare:KeyPattern = compare.as_pattern();
+		let compare:KeyPattern = compare.pattern();
 		self.high |= compare.high;
 		self.low |= compare.low;
 	}
@@ -210,7 +210,7 @@ impl BitXor<Key> for KeyPattern {
 	type Output = KeyPattern;
 	
 	fn bitxor(self, compare:Key) -> KeyPattern {
-		self ^ compare.as_pattern()
+		self ^ compare.pattern()
 	}
 }
 impl BitXorAssign<KeyPattern> for KeyPattern {
@@ -221,7 +221,7 @@ impl BitXorAssign<KeyPattern> for KeyPattern {
 }
 impl BitXorAssign<Key> for KeyPattern {
 	fn bitxor_assign(&mut self, compare:Key) {
-		let compare:KeyPattern = compare.as_pattern();
+		let compare:KeyPattern = compare.pattern();
 		self.high ^= compare.high;
 		self.low ^= compare.low;
 	}
