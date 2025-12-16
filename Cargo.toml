@@ -14,5 +14,4 @@ minifb={ version="0.28.0", optional=true }
 
 [features]
 default=[]
-humanlike=["dep:file_ref", "dep:minifb"]
 sleep=["dep:windows-sys"]

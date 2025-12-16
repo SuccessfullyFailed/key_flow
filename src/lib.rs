@@ -16,6 +16,3 @@ pub use key_pattern::KeyPattern;
 pub use hokey::{ Hotkey, HotkeyHandle };
 pub use sleep::*;
 pub use input_builder::*;
-
-#[cfg(feature="humanlike")]
-pub mod humanlike;
