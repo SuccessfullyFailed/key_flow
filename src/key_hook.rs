@@ -118,12 +118,12 @@ pub(crate) fn handle_key_alteration(key_code:u8, down:bool) {
 
 /// Handle a virtual key being pressed or released.
 #[allow(static_mut_refs)]
-pub(crate) fn handle_virtual_key_alteration(key_pattern:KeyPattern, down:bool) {
+pub(crate) fn handle_virtual_key_alteration(key_code:u8, down:bool) {
 	unsafe {
 		if down {
-			VIRTUAL_KEY_STATES ^= key_pattern;
+			VIRTUAL_KEY_STATES |= Key::new(key_code);
 		} else {
-			VIRTUAL_KEY_STATES &= !key_pattern;
+			VIRTUAL_KEY_STATES &= !Key::new(key_code).as_pattern();
 		}
 	}
 }

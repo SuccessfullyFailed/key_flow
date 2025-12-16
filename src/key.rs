@@ -1,4 +1,4 @@
-use crate::{ KeyPattern, key_hook, keys };
+use crate::{ InputBuilder, KeyPattern, key_hook, keys };
 use mini_rand::Randomizable;
 use std::time::Duration;
 
@@ -118,22 +118,22 @@ impl Key {
 
 	/// Press the key.
 	pub fn press(&self) {
-		self.as_pattern().press();
+		InputBuilder::new().with_press(self).execute();
 	}
 
 	/// Release the key.
 	pub fn release(&self) {
-		self.as_pattern().release();
+		InputBuilder::new().with_release(self).execute();
 	}
 
 	/// Send the key.
 	pub fn send<T>(&self, duration:T) where T:Randomizable<Duration> {
-		self.as_pattern().send(duration);
+		InputBuilder::new().with_send(self, duration.randomizable_value().as_millis() as u64).execute();
 	}
 
-	/// Send the key and wait until the key is released.
-	pub fn send_await<T>(&self, duration:T) where T:Randomizable<Duration> {
-		self.as_pattern().send_await(duration);
+	/// Send the key in a separate thread.
+	pub fn send_async<T>(&self, duration:T) where T:Randomizable<Duration> {
+		InputBuilder::new().with_send(self, duration.randomizable_value().as_millis() as u64).execute_async();
 	}
 }
 impl PartialEq for Key {

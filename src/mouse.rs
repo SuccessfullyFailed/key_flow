@@ -26,7 +26,7 @@ pub fn get_pos() -> [i32; 2] {
 pub fn click<T>(position:[i32; 2], duration:T) where T:Randomizable<Duration> {
 	let original_pos:[i32; 2] = get_pos();
 	move_to(position);
-	LBUTTON.send_await(duration);
+	LBUTTON.send(duration);
 	move_to(original_pos);
 }
 

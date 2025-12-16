@@ -50,7 +50,7 @@ pub fn click<T, U, V, W>(position:T, move_interval:U, move_duration:V, press_dur
 
 	let original_position:[i32; 2] = get_pos();
 	move_to(position, move_interval, move_duration);
-	LBUTTON.send_await(press_duration);
+	LBUTTON.send(press_duration);
 	if return_to_original_pos {
 		move_to(original_position, move_interval, move_duration);
 	}
