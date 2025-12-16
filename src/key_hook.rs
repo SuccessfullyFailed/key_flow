@@ -138,6 +138,6 @@ pub fn get_key_state(key_code:u8) -> bool {
 }
 
 /// Get the virtual key state of a key (programatically pressed).
-pub fn get_virtual_key_state(key_code:u8) -> bool {
+pub fn get_key_state_v(key_code:u8) -> bool {
 	unsafe { VIRTUAL_KEY_STATES & Key::new(key_code).pattern() != KeyPattern::ZERO }
 }

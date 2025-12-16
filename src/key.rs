@@ -109,9 +109,14 @@ impl Key {
 		self.pattern
 	}
 
-	/// Check if the key is down.
+	/// Check if the key is down physically.
 	pub fn down(&self) -> bool {
 		key_hook::get_key_state(self.code)
+	}
+
+	/// Check if the key is down virtually.
+	pub fn down_v(&self) -> bool {
+		key_hook::get_key_state_v(self.code)
 	}
 
 	/// Whether or not this key is a modifier key, a key that usually doesn't do anything on it's own, but modifies other keys. Shift or Control for example.

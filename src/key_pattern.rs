@@ -1,5 +1,5 @@
 use std::{ time::Duration, ops::{ Add, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr } };
-use crate::{ InputBuilder, Key, key_hook::PHYSICAL_KEY_STATES };
+use crate::{ InputBuilder, Key, key_hook::{PHYSICAL_KEY_STATES, VIRTUAL_KEY_STATES} };
 use mini_rand::Randomizable;
 
 
@@ -74,14 +74,24 @@ impl KeyPattern {
 		keys
 	}
 
-	/// Returns self, filtered by the keys that are pressed.
+	/// Returns self, filtered by the keys that are physically pressed.
 	pub fn pressed_pattern(&self) -> KeyPattern {
 		*self & unsafe { PHYSICAL_KEY_STATES }
 	}
 
-	/// Whether or not the pattern is completely pressed.
+	/// Returns self, filtered by the keys that are virtually pressed.
+	pub fn pressed_pattern_v(&self) -> KeyPattern {
+		*self & unsafe { VIRTUAL_KEY_STATES }
+	}
+
+	/// Whether or not the pattern is completely physically pressed.
 	pub fn all_pressed(&self) -> bool {
 		self.pressed_pattern() == *self
+	}
+
+	/// Whether or not the pattern is completely virtually pressed.
+	pub fn all_pressed_v(&self) -> bool {
+		self.pressed_pattern_v() == *self
 	}
 
 	/// Press all keys in the pattern.
