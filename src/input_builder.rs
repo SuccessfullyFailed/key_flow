@@ -1,4 +1,4 @@
-use winapi::um::winuser::{ INPUT, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, MAPVK_VK_TO_VSC, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
+use winapi::um::winuser::{ INPUT, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
 use crate::{ Key, KeyPattern, key_hook::handle_virtual_key_alteration, sleep };
 use std::{ mem, ptr, thread, time::Duration };
 
@@ -160,7 +160,7 @@ impl InputBuilder {
 		unsafe {
 			let mut input_record:INPUT = INPUT { type_: 1, u: mem::MaybeUninit::uninit().assume_init() };
 			let flags:u32 = if key_down { 0 } else { KEYEVENTF_KEYUP };
-			let input:KEYBDINPUT = KEYBDINPUT { wVk: 0_u16, wScan: MapVirtualKeyW(key_code as u32, MAPVK_VK_TO_VSC) as u16, dwFlags: flags | KEYEVENTF_SCANCODE, time: 0, dwExtraInfo: 0 };
+			let input:KEYBDINPUT = KEYBDINPUT { wVk: key_code as u16, wScan: MapVirtualKeyW(key_code as u32, 0) as u16, dwFlags: flags, time: 0, dwExtraInfo: 0 };
 			ptr::write(&mut input_record.u as *mut _ as *mut KEYBDINPUT, input);
 			input_record
 		}
