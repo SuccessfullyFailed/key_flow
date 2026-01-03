@@ -1,4 +1,4 @@
-use winapi::um::winuser::{ INPUT, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
+use winapi::um::winuser::{ INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SendInput };
 use crate::{ Key, KeyPattern, key_hook::handle_virtual_key_alteration, sleep };
 use std::{ mem, ptr, thread, time::Duration };
 
@@ -147,7 +147,7 @@ impl InputBuilder {
 
 	/// Create a raw input from core data.
 	fn create_raw_input(key_code:u8, key_down:bool) -> INPUT {
-		if key_code < 5 {
+		if key_code < 6 {
 			Self::create_raw_input_mouse(key_code, key_down)
 		} else {
 			Self::create_raw_input_keyboard(key_code, key_down)
@@ -174,8 +174,8 @@ impl InputBuilder {
 		let event_list:&[u32; 5] = if key_down { &MOUSE_DOWN_EVENTS } else { &MOUSE_UP_EVENTS };
 
 		unsafe {
-			let mut input_record:INPUT = INPUT { type_: 1, u: mem::MaybeUninit::uninit().assume_init() };
-			let flags:u32 = event_list[key_code as usize];
+			let mut input_record:INPUT = INPUT { type_: INPUT_MOUSE, u: mem::MaybeUninit::uninit().assume_init() };
+			let flags:u32 = event_list[key_code as usize - 1];
 			let input:MOUSEINPUT = MOUSEINPUT { dx: 0, dy: 0, mouseData: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 };
 			ptr::write(&mut input_record.u as *mut _ as *mut MOUSEINPUT, input);
 			input_record
