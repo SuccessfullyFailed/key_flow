@@ -23,6 +23,7 @@ pub struct Hotkey {
 	id:u64,
 	key_pattern:KeyPattern,
 	on_press:Option<Box<dyn Fn() + Send + Sync>>,
+	on_repeat:Option<Box<dyn Fn() + Send + Sync>>,
 	on_release:Option<Box<dyn Fn() + Send + Sync>>,
 	blocking:bool,
 	state:bool,
@@ -42,6 +43,7 @@ impl Hotkey {
 			id: unsafe { ID_GENERATOR += 1; ID_GENERATOR },
 			key_pattern: keys.iter().map(|key| key.pattern()).reduce(|a, b| a ^ b).unwrap_or_default(),
 			on_press: None,
+			on_repeat: Some(Box::new(|| {})), // When blocking and on-press are enabled, makes sure on-repeat blocks too.
 			on_release: None,
 			blocking: false,
 			state: false,
@@ -55,6 +57,12 @@ impl Hotkey {
 	/// Return self with a handler that triggers when all keys are pressed.
 	pub fn on_press<T>(mut self, handler:T) -> Self where T:Fn() + 'static + Send + Sync {
 		self.on_press = Some(Box::new(handler));
+		self
+	}
+
+	/// Return self with a handler that triggers when all keys are pressed and any of the keys is repeating.
+	pub fn on_repeat<T>(mut self, handler:T) -> Self where T:Fn() + 'static + Send + Sync {
+		self.on_repeat = Some(Box::new(handler));
 		self
 	}
 
@@ -146,11 +154,9 @@ impl Hotkey {
 		if !self.enabled { return false; }
 		let new_state:bool = self.key_pattern & *active_pattern == self.key_pattern;
 		let mut executed_any:bool = false;
-		if new_state != self.state {
-			if let Some(handler) = if new_state { &self.on_press } else { &self.on_release } {
-				handler();
-				executed_any = true;
-			}
+		if let Some(handler) = if new_state && !self.state { &self.on_press } else if new_state && self.state { &self.on_repeat } else if !new_state && self.state { &self.on_release } else { &None } {
+			handler();
+			executed_any = true;
 		}
 		self.state = new_state;
 
