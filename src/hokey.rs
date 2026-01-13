@@ -138,7 +138,7 @@ impl Hotkey {
 	}
 
 	/// Update the current state. Returns true if hotkey blocks.
-	pub(crate) fn update_state(&mut self, active_pattern:&KeyPattern) -> bool {
+	pub(crate) fn update_state(&mut self, state_change_pattern:KeyPattern, active_pattern:&KeyPattern) -> bool {
 
 		// Handle requested modifications.
 		for modification in self.modifications_queue.take_all() {
@@ -150,8 +150,12 @@ impl Hotkey {
 			}
 		}
 
-		// Update state.
-		if !self.enabled { return false; }
+		// If the hotkey is disabled or the changed key does not affect this hotkey, return now.
+		if !self.enabled || state_change_pattern & self.key_pattern == KeyPattern::ZERO {
+			return false;
+		}
+
+		// Update state change.
 		let new_state:bool = self.key_pattern & *active_pattern == self.key_pattern;
 		let mut executed_any:bool = false;
 		if let Some(handler) = if new_state && !self.state { &self.on_press } else if new_state && self.state { &self.on_repeat } else if !new_state && self.state { &self.on_release } else { &None } {
