@@ -159,6 +159,7 @@ pub const MEDIA_PREV_TRACK:Key = Key::new(0xB);
 
 pub const COLON:Key = Key::new(0xBA);
 pub const COMMA:Key = Key::new(0xBC);
+pub const PERIOD:Key = Key::new(0xBE);
 pub const TILDA:Key = Key::new(0xC0);
 pub const QUOTE:Key = Key::new(0xDE);
 pub const BLOCK_OPEN:Key = Key::new(0xDB);

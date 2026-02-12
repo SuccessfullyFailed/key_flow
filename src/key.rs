@@ -71,6 +71,8 @@ impl Key {
 			' '  => vec![keys::SPACE],
 			','  => vec![keys::COMMA],
 			'<'  => vec![keys::SHIFT, keys::COMMA],
+			'.'  => vec![keys::PERIOD],
+			'>'  => vec![keys::SHIFT, keys::PERIOD],
 			';'  => vec![keys::COLON],
 			':'  => vec![keys::SHIFT, keys::COLON],
 			'\'' => vec![keys::QUOTE],
