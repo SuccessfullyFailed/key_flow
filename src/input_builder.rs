@@ -1,7 +1,6 @@
 use winapi::um::winuser::{ GetSystemMetrics, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_VIRTUALDESK, MOUSEEVENTF_WHEEL, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SM_CXSCREEN, SM_CYSCREEN, SendInput };
 use crate::{ Key, KeyPattern, key_hook::handle_virtual_key_alteration, sleep };
-use std::{ mem, ptr, thread, time::Duration };
-use cachew::cache;
+use std::{ mem, ptr, sync::Mutex, thread, time::Duration };
 
 
 
@@ -151,8 +150,17 @@ impl InputBuilder {
 	pub fn add_mouse_move(&mut self, target_position:[i32; 2]) {
 		const POSITION_MULTIPLIER:i32 = 65535;
 
-		let screen_size:&[i32; 2] = cache!([i32; 2], [GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)]);
-		let normalized_position:[i32; 2] = [target_position[0] * POSITION_MULTIPLIER / screen_size[0], target_position[1] * POSITION_MULTIPLIER / screen_size[1]];
+		static SCREEN_METRICS_CACHE:Mutex<Option<[i32; 2]>> = Mutex::new(None);
+		let mut screen_metrics_handle = SCREEN_METRICS_CACHE.lock().unwrap();
+		let screen_metrics:[i32; 2] = match &mut *screen_metrics_handle {
+			Some(metrics) => metrics.clone(),
+			None => {
+				let metrics = unsafe { [GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)] };
+				*screen_metrics_handle = Some(metrics.clone());
+				metrics
+			}
+		};
+		let normalized_position:[i32; 2] = [target_position[0] * POSITION_MULTIPLIER / screen_metrics[0], target_position[1] * POSITION_MULTIPLIER / screen_metrics[1]];
 		self.add_raw_mouse_input(0, MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK, normalized_position[0], normalized_position[1]);
 	}
 
