@@ -52,3 +52,9 @@ pub fn drag<T>(start:[i32; 2], end:[i32; 2], press_duration:T) where T:Randomiza
 	input_builder.add_mouse_move(end);
 	input_builder.execute();
 }
+
+/// Scroll a specific offset.
+/// Negative offsets go down.
+pub fn scroll(offset:i32) {
+	InputBuilder::new().with_mouse_scroll(offset).execute();
+}

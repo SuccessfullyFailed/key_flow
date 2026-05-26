@@ -1,7 +1,7 @@
-use cachew::cache;
-use winapi::um::winuser::{ GetSystemMetrics, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_VIRTUALDESK, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SM_CXSCREEN, SM_CYSCREEN, SendInput };
+use winapi::um::winuser::{ GetSystemMetrics, INPUT, INPUT_MOUSE, KEYBDINPUT, KEYEVENTF_KEYUP, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_VIRTUALDESK, MOUSEEVENTF_WHEEL, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyW, SM_CXSCREEN, SM_CYSCREEN, SendInput };
 use crate::{ Key, KeyPattern, key_hook::handle_virtual_key_alteration, sleep };
 use std::{ mem, ptr, thread, time::Duration };
+use cachew::cache;
 
 
 
@@ -95,6 +95,13 @@ impl InputBuilder {
 		self
 	}
 
+	/// Return self with a mouse scroll input.
+	/// Negative offsets scroll down.
+	pub fn with_mouse_scroll(mut self, offset:i32) -> Self {
+		self.add_mouse_scroll(offset);
+		self
+	}
+
 
 
 	/* INPUT ADDITION METHODS */
@@ -137,7 +144,7 @@ impl InputBuilder {
 	
 	/// Add a mouse displacement input.
 	pub fn add_mouse_displacement(&mut self, offset:[i32; 2]) {
-		self.add_raw_mouse_input(MOUSEEVENTF_MOVE, offset[0], offset[1])
+		self.add_raw_mouse_input(0, MOUSEEVENTF_MOVE, offset[0], offset[1])
 	}
 
 	/// Add a mouse move input.
@@ -146,7 +153,13 @@ impl InputBuilder {
 
 		let screen_size:&[i32; 2] = cache!([i32; 2], [GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)]);
 		let normalized_position:[i32; 2] = [target_position[0] * POSITION_MULTIPLIER / screen_size[0], target_position[1] * POSITION_MULTIPLIER / screen_size[1]];
-		self.add_raw_mouse_input(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK, normalized_position[0], normalized_position[1]);
+		self.add_raw_mouse_input(0, MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK, normalized_position[0], normalized_position[1]);
+	}
+
+	/// Add a mouse scroll input.
+	/// Negative offsets scroll down.
+	pub fn add_mouse_scroll(&mut self, offset:i32) {
+		self.add_raw_mouse_input(offset as u32, MOUSEEVENTF_WHEEL, 0, 0);
 	}
 	
 
@@ -234,12 +247,12 @@ impl InputBuilder {
 
 	/// Add an input from core mouse-data.
 	#[allow(invalid_value)]
-	fn add_raw_mouse_input(&mut self, flags:u32, x:i32, y:i32) {
+	fn add_raw_mouse_input(&mut self, mouse_data:u32, flags:u32, x:i32, y:i32) {
 		self.inputs.push(
 			InputBuilderInput::MouseInput(
 				unsafe {
 					let mut input_record:INPUT = INPUT { type_: INPUT_MOUSE, u: mem::MaybeUninit::uninit().assume_init() };
-					let input:MOUSEINPUT = MOUSEINPUT { dx: x, dy: y, mouseData: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 };
+					let input:MOUSEINPUT = MOUSEINPUT { dx: x, dy: y, mouseData: mouse_data, dwFlags: flags, time: 0, dwExtraInfo: 0 };
 					ptr::write(&mut input_record.u as *mut _ as *mut MOUSEINPUT, input);
 					input_record
 				}
