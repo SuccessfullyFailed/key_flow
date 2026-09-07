@@ -119,6 +119,21 @@ impl Default for KeyPattern {
 		KeyPattern::zero()
 	}
 }
+impl From<Vec<Key>> for KeyPattern {
+	fn from(value:Vec<Key>) -> Self {
+		KeyPattern::from(&value[..])
+	}
+}
+impl<const SIZE:usize> From<[Key; SIZE]> for KeyPattern {
+	fn from(value:[Key; SIZE]) -> Self {
+		KeyPattern::from(&value[..])
+	}
+}
+impl From<&[Key]> for KeyPattern {
+	fn from(value:&[Key]) -> Self {
+		value.iter().map(|key| key.pattern()).reduce(|a, b| a | b).unwrap_or_default()
+	}
+}
 impl Add for KeyPattern {
 	type Output = KeyPattern;
 
